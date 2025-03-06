@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        .chatbox { width: 50%; margin: auto; border: 1px solid #ccc; padding: 10px; border-radius: 10px; }
+        .chatbox p { background: #f1f1f1; padding: 10px; border-radius: 5px; }
+        .user { text-align: right; color: blue; }
+        .bot { text-align: left; color: green; }
+    </style>
+</head>
+<body>
+    <h1>Chatbot</h1>
+    <div class="chatbox" id="chatbox">
+        <p><strong>Bot:</strong> Hello! How can I help you?</p>
+    </div>
+    <input type="text" id="user_input" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        function sendMessage() {
+            let userInput = document.getElementById("user_input").value;
+            let chatbox = document.getElementById("chatbox");
+
+            let userMessage = `<p class="user"><strong>You:</strong> ${userInput}</p>`;
+            chatbox.innerHTML += userMessage;
+
+            fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userInput }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                let botMessage = `<p class="bot"><strong>Bot:</strong> ${data.response}</p>`;
+                chatbox.innerHTML += botMessage;
+            });
+
+            document.getElementById("user_input").value = "";
+        }
+    </script>
+</body>
+</html>
