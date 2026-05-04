@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JKRAA — AI Assistant</title>
+  <title>Zane — Legal Document Analyst</title>
+  <link rel="icon" href="/static/logo.png" type="image/png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -19,40 +20,42 @@
 :root {
   --sidebar-w:    270px;
   --header-h:     64px;
-  --bg:           #f4f4f5;
+  --bg:           #f0f4ff;
   --sidebar-bg:   #ffffff;
   --card-bg:      #ffffff;
-  --border:       #e4e4e7;
-  --text:         #09090b;
-  --text-2:       #71717a;
-  --text-3:       #a1a1aa;
-  --accent:       #7c3aed;
-  --accent-hover: #6d28d9;
-  --accent-muted: #ede9fe;
-  --user-bubble:  #7c3aed;
+  --border:       #d6e0ff;
+  --text:         #060f2e;
+  --text-2:       #4a5680;
+  --text-3:       #9ba5c9;
+  --accent:       #1a3fcc;
+  --accent-hover: #122faa;
+  --accent-muted: #dce8ff;
+  --user-bubble:  #1a3fcc;
   --input-bg:     #ffffff;
-  --shadow-sm:    0 1px 3px rgba(0,0,0,.08);
-  --shadow-md:    0 4px 12px rgba(0,0,0,.10);
+  --shadow-sm:    0 1px 3px rgba(10,30,120,.08);
+  --shadow-md:    0 4px 16px rgba(10,30,120,.12);
   --radius:       12px;
   --groq-color:   #10b981;
   --claude-color: #f59e0b;
+  --brand-grad:   linear-gradient(135deg, #0a1a6e, #2550e0);
 }
 
 [data-theme="dark"] {
-  --bg:           #09090b;
-  --sidebar-bg:   #111113;
-  --card-bg:      #18181b;
-  --border:       #27272a;
-  --text:         #fafafa;
-  --text-2:       #a1a1aa;
-  --text-3:       #52525b;
-  --accent:       #8b5cf6;
-  --accent-hover: #7c3aed;
-  --accent-muted: #2e1065;
-  --user-bubble:  #7c3aed;
-  --input-bg:     #18181b;
-  --shadow-sm:    0 1px 3px rgba(0,0,0,.4);
-  --shadow-md:    0 4px 12px rgba(0,0,0,.5);
+  --bg:           #07102a;
+  --sidebar-bg:   #0a1530;
+  --card-bg:      #0d1d3e;
+  --border:       #162450;
+  --text:         #e8eeff;
+  --text-2:       #8a9ac8;
+  --text-3:       #3d4f7a;
+  --accent:       #4070f0;
+  --accent-hover: #2f5fe0;
+  --accent-muted: #0f1e50;
+  --user-bubble:  #1a3fcc;
+  --input-bg:     #0d1d3e;
+  --shadow-sm:    0 1px 3px rgba(0,0,0,.5);
+  --shadow-md:    0 4px 16px rgba(0,0,0,.6);
+  --brand-grad:   linear-gradient(135deg, #0a1a6e, #2550e0);
 }
 
 /* ─── Reset ──────────────────────────────────────────────────────────── */
@@ -99,10 +102,16 @@ body {
 
 .brand-logo {
   width: 36px; height: 36px; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent), #06b6d4);
+  background: var(--brand-grad);
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 800; color: #fff; letter-spacing: -.5px;
+}
+
+.brand-logo-img {
+  width: 36px; height: 36px; flex-shrink: 0;
+  border-radius: 10px;
+  object-fit: contain;
 }
 
 .brand-info { display: flex; flex-direction: column; line-height: 1.25; }
@@ -281,7 +290,7 @@ body {
 
 .header-avatar {
   width: 36px; height: 36px; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent), #06b6d4);
+  background: var(--brand-grad);
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 800; color: #fff; letter-spacing: -.5px;
@@ -335,16 +344,23 @@ body {
 
 .welcome-logo-inner {
   width: 80px; height: 80px;
-  background: linear-gradient(135deg, var(--accent), #06b6d4);
+  background: var(--brand-grad);
   border-radius: 22px;
   display: flex; align-items: center; justify-content: center;
   font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -1px;
-  box-shadow: 0 8px 32px rgba(124,58,237,.3);
+  box-shadow: 0 8px 32px rgba(26,63,204,.35);
   animation: logoFloat 4s ease-in-out infinite;
 }
 @keyframes logoFloat {
   0%,100% { transform: translateY(0); }
   50%      { transform: translateY(-6px); }
+}
+
+.welcome-logo-img {
+  width: 100px; height: 100px;
+  object-fit: contain;
+  animation: logoFloat 4s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(26,63,204,.4));
 }
 
 .welcome-badge {
@@ -377,7 +393,7 @@ body {
 }
 .suggestion-card:hover {
   border-color: var(--accent);
-  box-shadow: 0 4px 16px rgba(124,58,237,.15);
+  box-shadow: 0 4px 16px rgba(26,63,204,.15);
   transform: translateY(-2px);
 }
 .sug-icon  { font-size: 20px; margin-bottom: 6px; display: block; }
@@ -409,8 +425,8 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 800; color: #fff; letter-spacing: -.5px;
 }
-.user-avatar { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-.bot-avatar  { background: linear-gradient(135deg, var(--accent), #06b6d4); }
+.user-avatar { background: linear-gradient(135deg, #1e50d8, #0d2fa8); }
+.bot-avatar  { background: var(--brand-grad); }
 
 .msg-content {
   flex: 1; min-width: 0;
@@ -597,7 +613,7 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
 }
 .input-box:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(124,58,237,.12);
+  box-shadow: 0 0 0 3px rgba(26,63,204,.15);
 }
 
 #userInput {
@@ -649,7 +665,7 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
   position: fixed;
   bottom: 28px; left: 50%;
   transform: translateX(-50%) translateY(10px);
-  background: #18181b; color: #fafafa;
+  background: #0a1a6e; color: #e8eeff;
   padding: 10px 20px;
   border-radius: 10px;
   font-size: 13px;
@@ -672,6 +688,359 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* ─── Risk Cards ────────────────────────────────────────────────────── */
+.risk-summary,
+.risk-invite { margin-bottom: 14px; }
+.risk-invite  { margin-top: 14px; margin-bottom: 0; }
+
+.risk-score-bar {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 14px;
+}
+.risk-count {
+  display: inline-flex; align-items: center;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 11px; font-weight: 800; letter-spacing: .05em;
+}
+.rc-red   { background: rgba(239,68,68,.12);  color: #ef4444; border: 1px solid rgba(239,68,68,.25); }
+.rc-amber { background: rgba(245,158,11,.12); color: #f59e0b; border: 1px solid rgba(245,158,11,.25); }
+.rc-green { background: rgba(34,197,94,.12);  color: #22c55e; border: 1px solid rgba(34,197,94,.25); }
+
+.risk-clear-banner {
+  padding: 12px 16px;
+  background: rgba(34,197,94,.08);
+  border: 1px solid rgba(34,197,94,.3);
+  border-radius: 10px;
+  color: #22c55e; font-weight: 600; font-size: 14px;
+  margin-bottom: 14px;
+}
+
+.risk-cards { display: flex; flex-direction: column; gap: 10px; }
+
+.risk-card {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-left: 4px solid;
+  padding: 14px 16px;
+  background: var(--card-bg);
+  animation: msgIn .2s ease both;
+}
+.risk-red   { border-left-color: #ef4444; }
+.risk-amber { border-left-color: #f59e0b; }
+.risk-green { border-left-color: #22c55e; }
+
+.risk-card-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.risk-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 10px; font-weight: 800; letter-spacing: .07em;
+  flex-shrink: 0;
+}
+.rb-red   { background: rgba(239,68,68,.15);  color: #ef4444; }
+.rb-amber { background: rgba(245,158,11,.15); color: #f59e0b; }
+.rb-green { background: rgba(34,197,94,.15);  color: #22c55e; }
+
+.risk-clause-type { font-size: 14px; font-weight: 700; color: var(--text); }
+
+.risk-quote {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-left: 3px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px; font-style: italic; color: var(--text-2);
+  line-height: 1.55;
+}
+
+.risk-explanation { font-size: 14px; color: var(--text); line-height: 1.65; }
+.risk-explanation p { margin-bottom: 6px; }
+.risk-explanation p:last-child { margin-bottom: 0; }
+.risk-explanation ul { padding-left: 18px; }
+.risk-explanation li { margin-bottom: 3px; }
+
+.explain-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 12px;
+  padding: 5px 13px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px; font-weight: 500; font-family: inherit;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.explain-btn:hover:not(:disabled) {
+  background: var(--accent-muted);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.explain-btn.open {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-muted);
+}
+.explain-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.explain-panel {
+  display: none;
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px; line-height: 1.7; color: var(--text);
+  animation: msgIn .2s ease both;
+}
+.explain-panel.visible { display: block; }
+.explain-panel p { margin-bottom: 8px; }
+.explain-panel p:last-child { margin-bottom: 0; }
+.explain-panel strong { font-weight: 600; }
+
+/* ─── Card action row ───────────────────────────────────────────────── */
+.card-actions {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 12px;
+}
+
+/* ─── Rewrite button ────────────────────────────────────────────────── */
+.rewrite-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 13px;
+  border: 1px solid #7c3aed44;
+  border-radius: 7px;
+  background: transparent;
+  color: #7c3aed;
+  font-size: 12px; font-weight: 500; font-family: inherit;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+[data-theme="dark"] .rewrite-btn { color: #a78bfa; border-color: #7c3aed66; }
+.rewrite-btn:hover:not(:disabled) {
+  background: #7c3aed18;
+  border-color: #7c3aed;
+}
+.rewrite-btn.open { background: #7c3aed18; border-color: #7c3aed; }
+.rewrite-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ─── Rewrite panel ─────────────────────────────────────────────────── */
+.rewrite-panel {
+  display: none;
+  margin-top: 12px;
+  border: 1px solid #7c3aed33;
+  border-radius: 10px;
+  overflow: hidden;
+  animation: msgIn .2s ease both;
+}
+.rewrite-panel.visible { display: block; }
+
+.rewrite-streaming {
+  padding: 14px 16px;
+  font-size: 13px; line-height: 1.7; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.rewrite-section { border-top: 1px solid #7c3aed22; }
+.rewrite-section:first-child { border-top: none; }
+
+.rewrite-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px 6px;
+  background: #7c3aed0a;
+}
+[data-theme="dark"] .rewrite-section-header { background: #7c3aed18; }
+
+.rewrite-section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: #7c3aed;
+}
+[data-theme="dark"] .rewrite-section-label { color: #a78bfa; }
+
+.rewrite-section-body {
+  padding: 8px 14px 12px;
+  font-size: 13px; line-height: 1.7; color: var(--text);
+}
+.rewrite-section-body p { margin-bottom: 6px; }
+.rewrite-section-body p:last-child { margin-bottom: 0; }
+.rewrite-section-body strong { font-weight: 600; }
+
+.rewrite-copy-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px;
+  border: 1px solid #7c3aed44;
+  border-radius: 5px;
+  background: transparent;
+  color: #7c3aed;
+  font-size: 11px; font-weight: 500; font-family: inherit;
+  cursor: pointer;
+  transition: background .15s;
+  flex-shrink: 0;
+}
+[data-theme="dark"] .rewrite-copy-btn { color: #a78bfa; border-color: #7c3aed55; }
+.rewrite-copy-btn:hover { background: #7c3aed18; }
+
+/* ─── Pro modal ─────────────────────────────────────────────────────── */
+.pro-modal-backdrop {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 1000;
+  align-items: center; justify-content: center;
+  animation: fadeIn .15s ease both;
+}
+.pro-modal-backdrop.visible { display: flex; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.pro-modal {
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 28px 24px;
+  max-width: 360px; width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  animation: slideUp .2s ease both;
+}
+@keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.pro-modal-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.pro-modal h3 {
+  font-size: 18px; font-weight: 700; color: var(--text);
+  margin-bottom: 8px;
+}
+.pro-modal p {
+  font-size: 14px; color: var(--text-2); line-height: 1.6;
+  margin-bottom: 22px;
+}
+.pro-modal-actions { display: flex; flex-direction: column; gap: 10px; }
+.pro-upgrade-btn {
+  padding: 11px;
+  border: none; border-radius: 9px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  font-size: 14px; font-weight: 600; font-family: inherit;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.pro-upgrade-btn:hover { opacity: .9; }
+.pro-dismiss-btn {
+  padding: 10px;
+  border: 1px solid var(--border); border-radius: 9px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 14px; font-weight: 500; font-family: inherit;
+  cursor: pointer;
+  transition: background .15s;
+}
+.pro-dismiss-btn:hover { background: var(--accent-muted); }
+
+.spinner-sm {
+  width: 13px; height: 13px; flex-shrink: 0;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: inline-block;
+}
+
+/* ─── File Upload ────────────────────────────────────────────────────── */
+.upload-btn {
+  width: 34px; height: 34px; flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.upload-btn:hover { background: var(--accent-muted); color: var(--accent); border-color: var(--accent); }
+.upload-btn.has-file { background: var(--accent-muted); color: var(--accent); border-color: var(--accent); }
+
+.file-state {
+  display: none;
+  align-items: center; gap: 10px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  animation: msgIn .2s ease both;
+}
+.file-state.visible { display: flex; }
+
+.file-preview-card {
+  background: var(--card-bg);
+  border: 1px solid var(--accent);
+}
+.file-loading-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+}
+.file-error-card {
+  background: rgba(239,68,68,.07);
+  border: 1px solid rgba(239,68,68,.3);
+  color: #ef4444;
+}
+
+.file-icon-box {
+  width: 34px; height: 34px; flex-shrink: 0;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.file-preview-card .file-icon-box { background: var(--accent-muted); color: var(--accent); }
+.file-error-card .file-icon-box   { background: rgba(239,68,68,.1); color: #ef4444; }
+
+.file-info { flex: 1; min-width: 0; }
+.file-info-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.file-info-meta { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+.file-dismiss {
+  flex-shrink: 0;
+  background: transparent; border: none;
+  color: var(--text-3); cursor: pointer;
+  padding: 4px; border-radius: 4px;
+  line-height: 1;
+  transition: color .15s, background .15s;
+  font-size: 16px;
+}
+.file-dismiss:hover { color: #ef4444; background: rgba(239,68,68,.1); }
+
+.spinner {
+  width: 18px; height: 18px; flex-shrink: 0;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Drag-and-drop overlay */
+.drag-overlay {
+  display: none;
+  position: absolute; inset: 0;
+  background: rgba(26,63,204,.06);
+  border: 2px dashed var(--accent);
+  z-index: 30;
+  align-items: center; justify-content: center; flex-direction: column;
+  gap: 10px;
+  color: var(--accent);
+  pointer-events: none;
+}
+.drag-overlay.active { display: flex; }
+.drag-overlay-title  { font-size: 17px; font-weight: 700; }
+.drag-overlay-sub    { font-size: 13px; opacity: .7; }
 
 /* ─── Mobile ─────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
@@ -698,10 +1067,12 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-top">
       <div class="brand">
-        <div class="brand-logo">JK</div>
+        <img src="/static/logo.png" class="brand-logo-img" alt="Zane"
+             onerror="this.style.display='none';document.getElementById('brandFallback').style.display='flex'">
+        <div class="brand-logo" id="brandFallback" style="display:none">ZN</div>
         <div class="brand-info">
-          <span class="brand-name">JKRAA</span>
-          <span class="brand-sub">AI Assistant</span>
+          <span class="brand-name">Zane</span>
+          <span class="brand-sub">Legal Document Analyst</span>
         </div>
       </div>
       <button class="new-chat-btn" onclick="newChat()">
@@ -732,7 +1103,7 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
     <div class="sidebar-footer">
       <div class="model-pill">
         <span class="pulse"></span>
-        <span id="modelLabel">JKRAA · Free</span>
+        <span id="modelLabel">Zane · Free</span>
       </div>
       <button class="icon-btn" onclick="exportChat()">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -752,8 +1123,33 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
   <!-- Mobile overlay -->
   <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
+  <!-- Pro modal -->
+  <div class="pro-modal-backdrop" id="proModalBackdrop" onclick="hideProModal(event)">
+    <div class="pro-modal" role="dialog" aria-modal="true" aria-labelledby="proModalTitle">
+      <div class="pro-modal-icon">
+        <svg width="26" height="26" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+      </div>
+      <h3 id="proModalTitle">Pro Feature</h3>
+      <p>Rewriting clauses is available on the Pro plan. Switch to Pro mode or upgrade your plan to generate balanced counter-clauses instantly.</p>
+      <div class="pro-modal-actions">
+        <button class="pro-upgrade-btn" onclick="handleProUpgrade()">Upgrade to Pro</button>
+        <button class="pro-dismiss-btn" onclick="hideProModal()">Not now</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ─── Main ────────────────────────────────────────────────────── -->
   <main class="chat-main" id="chatMain">
+    <!-- Drag-and-drop overlay -->
+    <div class="drag-overlay" id="dragOverlay">
+      <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+      </svg>
+      <span class="drag-overlay-title">Drop your document here</span>
+      <span class="drag-overlay-sub">PDF or DOCX · Max 20 MB</span>
+    </div>
     <!-- Header -->
     <div class="chat-header">
       <div class="header-left">
@@ -763,9 +1159,9 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
           </svg>
         </button>
         <div class="header-brand">
-          <div class="header-avatar">JK</div>
+          <div class="header-avatar">ZN</div>
           <div class="header-name-group">
-            <span class="header-title">JKRAA</span>
+            <span class="header-title">Zane</span>
             <span class="header-status" id="headerStatus">Free Mode · Online</span>
           </div>
         </div>
@@ -790,33 +1186,35 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
     <div class="messages-wrap" id="messagesWrap">
       <!-- Welcome -->
       <div class="welcome" id="welcome">
-        <div class="welcome-logo-inner">JK</div>
+        <img src="/static/logo.png" class="welcome-logo-img" alt="Zane"
+             onerror="this.style.display='none';document.getElementById('welcomeFallback').style.display='flex'">
+        <div class="welcome-logo-inner" id="welcomeFallback" style="display:none">ZN</div>
         <div class="welcome-badge">
           <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg>
           Ready to help
         </div>
-        <h1>Hi, I'm JKRAA</h1>
-        <p class="welcome-sub">Your personal AI companion. Ask me anything — coding, writing, analysis, research, and more.</p>
+        <h1>Hi, I'm Zane</h1>
+        <p class="welcome-sub">Your personal contract &amp; legal document analyst. Paste any contract and I'll break it down, flag the risks, and help you negotiate.</p>
         <div class="suggestions">
-          <button class="suggestion-card" onclick="useSuggestion('Write a Python function that finds all prime numbers up to n using the Sieve of Eratosthenes.')">
-            <span class="sug-icon">🐍</span>
-            <span class="sug-title">Write Python code</span>
-            <span class="sug-sub">Sieve of Eratosthenes</span>
+          <button class="suggestion-card" onclick="useSuggestion('What should I look out for before signing a freelance contract?')">
+            <span class="sug-icon">📋</span>
+            <span class="sug-title">Freelance contract checklist</span>
+            <span class="sug-sub">Before you sign</span>
           </button>
-          <button class="suggestion-card" onclick="useSuggestion('Explain how large language models work in simple terms, as if I am 15 years old.')">
-            <span class="sug-icon">🧠</span>
-            <span class="sug-title">Explain AI concepts</span>
-            <span class="sug-sub">In simple terms</span>
+          <button class="suggestion-card" onclick="useSuggestion('Explain what a non-compete clause is and how it could affect me.')">
+            <span class="sug-icon">🚫</span>
+            <span class="sug-title">Non-compete clauses</span>
+            <span class="sug-sub">What they really mean</span>
           </button>
-          <button class="suggestion-card" onclick="useSuggestion('What are the best REST API design principles and conventions I should follow in 2025?')">
-            <span class="sug-icon">🔌</span>
-            <span class="sug-title">REST API best practices</span>
-            <span class="sug-sub">Design principles 2025</span>
+          <button class="suggestion-card" onclick="useSuggestion('What is IP assignment in a contract and why does it matter for freelancers?')">
+            <span class="sug-icon">💡</span>
+            <span class="sug-title">IP ownership explained</span>
+            <span class="sug-sub">Who owns your work?</span>
           </button>
-          <button class="suggestion-card" onclick="useSuggestion('Write a professional email politely declining a meeting request due to a scheduling conflict.')">
-            <span class="sug-icon">✉️</span>
-            <span class="sug-title">Write a professional email</span>
-            <span class="sug-sub">Decline a meeting</span>
+          <button class="suggestion-card" onclick="useSuggestion('How do I negotiate better payment terms in a client contract?')">
+            <span class="sug-icon">💰</span>
+            <span class="sug-title">Negotiate payment terms</span>
+            <span class="sug-sub">Get paid fairly &amp; on time</span>
           </button>
         </div>
       </div>
@@ -835,6 +1233,40 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
     <!-- Input -->
     <div class="input-area">
       <div class="input-wrapper">
+        <!-- Hidden file input -->
+        <input type="file" id="fileInput" accept=".pdf,.docx" style="display:none" onchange="handleFileInputChange(event)">
+
+        <!-- Loading state -->
+        <div class="file-state file-loading-card" id="fileLoadingCard">
+          <div class="spinner"></div>
+          <span>Reading document…</span>
+        </div>
+
+        <!-- Preview card -->
+        <div class="file-state file-preview-card" id="filePreviewCard">
+          <div class="file-icon-box">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+            </svg>
+          </div>
+          <div class="file-info">
+            <div class="file-info-name" id="previewFileName"></div>
+            <div class="file-info-meta" id="previewFileMeta"></div>
+          </div>
+          <button class="file-dismiss" onclick="clearFile()" title="Remove file">&#x2715;</button>
+        </div>
+
+        <!-- Error card -->
+        <div class="file-state file-error-card" id="fileErrorCard">
+          <div class="file-icon-box">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+            </svg>
+          </div>
+          <span id="fileErrorMsg" style="flex:1"></span>
+          <button class="file-dismiss" onclick="clearFileError()" title="Dismiss">&#x2715;</button>
+        </div>
+
         <div class="input-provider-bar">
           <span class="input-provider-pill groq" id="inputProviderPill">
             <svg width="7" height="7" viewBox="0 0 7 7" fill="currentColor"><circle cx="3.5" cy="3.5" r="3.5"/></svg>
@@ -842,7 +1274,12 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
           </span>
         </div>
         <div class="input-box">
-          <textarea id="userInput" placeholder="Message JKRAA…" rows="1"
+          <button class="upload-btn" id="uploadBtn" onclick="triggerFileInput()" title="Upload PDF or DOCX">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/>
+            </svg>
+          </button>
+          <textarea id="userInput" placeholder="Message Zane…" rows="1"
             onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
           <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Send">
             <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24">
@@ -850,7 +1287,7 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
             </svg>
           </button>
         </div>
-        <p class="input-hint">Enter to send · Shift+Enter for new line · JKRAA can make mistakes</p>
+        <p class="input-hint">Enter to send · Shift+Enter for new line · Zane can make mistakes</p>
       </div>
     </div>
   </main>
@@ -912,16 +1349,34 @@ document.addEventListener('click', function(e) {
 
   const regenBtn = e.target.closest('.regen-btn');
   if (regenBtn) regenerate();
+
+  const explainBtn = e.target.closest('.explain-btn');
+  if (explainBtn && !explainBtn.disabled) toggleExplain(explainBtn);
+
+  const rewriteBtn = e.target.closest('.rewrite-btn');
+  if (rewriteBtn && !rewriteBtn.disabled) toggleRewrite(rewriteBtn);
+
+  const rwCopyBtn = e.target.closest('.rewrite-copy-btn');
+  if (rwCopyBtn) {
+    const idx = parseInt(rwCopyBtn.dataset.copyIdx, 10);
+    navigator.clipboard.writeText(rewriteCopyStore[idx] || '').then(() => {
+      const prev = rwCopyBtn.innerHTML;
+      rwCopyBtn.textContent = '✓ Copied!';
+      setTimeout(() => { rwCopyBtn.innerHTML = prev; }, 2000);
+    });
+  }
 });
 
 /* ─── State ─────────────────────────────────────────────────────────── */
-let isStreaming     = false;
+let isStreaming        = false;
+let riskRenderCounter = 0;
 let selectedProvider = 'groq';
 let lastUserMessage = '';
 let currentChatId  = generateId();
 let chats          = loadChats();
-const msgTexts     = new Map();
-const messageLog   = []; // [{role, text, model}] for export
+const msgTexts         = new Map();
+const messageLog       = []; // [{role, text, model}] for export
+const rewriteCopyStore = [];
 
 const PROVIDER_LABELS = {
   groq:      { name: 'Free',  model: 'Free Mode',  badge: 'Free'  },
@@ -979,7 +1434,7 @@ function updateProviderUI() {
   document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
   document.getElementById(selectedProvider === 'groq' ? 'tabGroq' : 'tabAnthropic').classList.add('active');
   document.getElementById('headerStatus').textContent  = info.name + ' · ' + info.model;
-  document.getElementById('modelLabel').textContent    = 'JKRAA · ' + info.name;
+  document.getElementById('modelLabel').textContent    = 'Zane · ' + info.name;
   const pill = document.getElementById('inputProviderPill');
   pill.className = 'input-provider-pill ' + selectedProvider;
   pill.innerHTML = `<svg width="7" height="7" viewBox="0 0 7 7" fill="currentColor"><circle cx="3.5" cy="3.5" r="3.5"/></svg>${info.name} · ${info.model}`;
@@ -1094,10 +1549,10 @@ function createBotMessageEl() {
   const div = document.createElement('div');
   div.className = 'message';
   div.innerHTML = `
-    <div class="avatar bot-avatar">JK</div>
+    <div class="avatar bot-avatar">ZN</div>
     <div class="msg-content">
       <div class="msg-meta">
-        <span class="msg-author">JKRAA</span>
+        <span class="msg-author">Zane</span>
         <span class="msg-time">${formatTime()}</span>
       </div>
       <div class="bot-markdown">
@@ -1113,7 +1568,17 @@ function createBotMessageEl() {
 function updateBotEl(el, rawText, done, modelName) {
   const body = el.querySelector('.bot-markdown');
   if (!body) return;
-  body.innerHTML = renderMarkdown(rawText) + (done ? '' : '<span class="stream-cursor"></span>');
+
+  if (!done) {
+    // While streaming show plain markdown so the user can read as it arrives
+    body.innerHTML = renderMarkdown(rawText) + '<span class="stream-cursor"></span>';
+  } else {
+    // On completion try to render as risk cards; fall back to plain markdown
+    const parsed = parseRiskCards(rawText);
+    body.innerHTML = (parsed && parsed.cards !== undefined)
+      ? renderRiskView(parsed)
+      : renderMarkdown(rawText);
+  }
 
   if (done) {
     const msgId = generateId();
@@ -1286,12 +1751,12 @@ async function clearChat() {
 function exportChat() {
   if (!messageLog.length) { showToast('No messages to export'); return; }
 
-  let md = `# JKRAA Chat Export\n\n*${new Date().toLocaleString()}*\n\n---\n\n`;
+  let md = `# Zane Chat Export\n\n*${new Date().toLocaleString()}*\n\n---\n\n`;
   for (const entry of messageLog) {
     if (entry.role === 'user') {
       md += `**You:** ${entry.text}\n\n`;
     } else {
-      md += `**JKRAA** *(${entry.model || 'AI'})*:\n\n${entry.text}\n\n---\n\n`;
+      md += `**Zane** *(${entry.model || 'AI'})*:\n\n${entry.text}\n\n---\n\n`;
     }
   }
 
@@ -1364,6 +1829,529 @@ async function switchChat(id) {
   renderChatList();
   closeSidebar();
   showToast('Switched chat — server context reset');
+}
+
+/* ─── Risk Card Parser & Renderer ───────────────────────────────────── */
+function isRiskAnalysis(text) {
+  return /\b(RED|AMBER|GREEN)\b/.test(text) &&
+    (/step\s*3/i.test(text) || /risk\s*flag/i.test(text) || /\b(RED|AMBER)\b.*\n.*\b(RED|AMBER|GREEN)\b/s.test(text));
+}
+
+function parseRiskCards(text) {
+  if (!isRiskAnalysis(text)) return null;
+
+  // ── Locate Step 3 and Step 4 boundaries ──────────────────────────────
+  const s3Idx = text.search(/step[\s\-–_]*3\b/i);
+  const s4Idx = text.search(/step[\s\-–_]*4\b/i);
+
+  let summaryPart, riskPart, invitePart;
+
+  if (s3Idx !== -1) {
+    summaryPart = text.slice(0, s3Idx);
+    riskPart    = s4Idx > s3Idx ? text.slice(s3Idx, s4Idx) : text.slice(s3Idx);
+    invitePart  = s4Idx > s3Idx ? text.slice(s4Idx) : '';
+  } else {
+    // No step headers — cut before the first risk keyword
+    const firstRisk = text.search(/\b(RED|AMBER|GREEN)\b/);
+    const cutAt     = text.lastIndexOf('\n\n', firstRisk);
+    summaryPart = cutAt > 0 ? text.slice(0, cutAt) : '';
+    riskPart    = cutAt > 0 ? text.slice(cutAt) : text;
+    invitePart  = '';
+  }
+
+  // ── Parse individual cards ────────────────────────────────────────────
+  const rawCards = [];
+  let current = null;
+
+  for (const line of riskPart.split('\n')) {
+    const levelMatch = line.match(/\b(RED|AMBER|GREEN)\b/);
+    if (levelMatch) {
+      if (current) rawCards.push(current);
+      const level      = levelMatch[1].toUpperCase();
+      const clauseType = line
+        .replace(/\b(RED|AMBER|GREEN)\b/gi, '')
+        .replace(/[🔴🟡🟢*_#—–:|\-]+/g, ' ')
+        .trim() || level + ' Clause';
+      current = { level, clauseType, bodyLines: [] };
+    } else if (current) {
+      current.bodyLines.push(line);
+    }
+  }
+  if (current) rawCards.push(current);
+
+  if (!rawCards.length) return null;
+
+  // ── Extract quote and explanation from each card body ─────────────────
+  const cards = rawCards.map(c => {
+    const body       = c.bodyLines.join('\n');
+    const quoteMatch = body.match(/"([^"]{5,}?)"/s);
+    const quote      = quoteMatch ? quoteMatch[1].trim() : '';
+    const explanation = body
+      .replace(quoteMatch ? quoteMatch[0] : '', '')
+      .replace(/\*\*(quoted clause|clause text|explanation|worst.?case)[:\s]*/gi, '\n')
+      .replace(/^[-*>]+/gm, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    return { level: c.level, clauseType: c.clauseType, quote, explanation };
+  }).filter(c => c.clauseType && (c.quote || c.explanation));
+
+  // ── Sort: RED → AMBER → GREEN ─────────────────────────────────────────
+  const ORDER = { RED: 0, AMBER: 1, GREEN: 2 };
+  cards.sort((a, b) => (ORDER[a.level] ?? 3) - (ORDER[b.level] ?? 3));
+
+  return { summaryPart, cards, invitePart };
+}
+
+function guessDocType(summaryText) {
+  const m = summaryText.match(
+    /\b(NDA|non-disclosure agreement|freelance contract|employment contract|service agreement|consulting agreement|partnership agreement|lease agreement|terms of service|independent contractor agreement|licence agreement)[^\n,.;]*/i
+  );
+  return m ? m[0].trim().slice(0, 80) : 'contract document';
+}
+
+function renderRiskView(parsed) {
+  const { summaryPart, cards, invitePart } = parsed;
+  const red   = cards.filter(c => c.level === 'RED');
+  const amber = cards.filter(c => c.level === 'AMBER');
+  const green = cards.filter(c => c.level === 'GREEN');
+
+  const rid     = ++riskRenderCounter;
+  const docType = guessDocType(summaryPart);
+
+  const EXPLAIN_ICON  = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+  const HIDE_ICON     = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>`;
+  const REWRITE_ICON  = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
+  const COLLAPSE_ICON = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>`;
+
+  let html = '';
+
+  if (summaryPart.trim())
+    html += `<div class="risk-summary">${renderMarkdown(summaryPart)}</div>`;
+
+  if (cards.length === 0) {
+    html += `<div class="risk-clear-banner">✅ No significant risks found</div>`;
+  } else {
+    html += `<div class="risk-score-bar">`;
+    if (red.length)   html += `<span class="risk-count rc-red">${red.length} RED</span>`;
+    if (amber.length) html += `<span class="risk-count rc-amber">${amber.length} AMBER</span>`;
+    if (green.length) html += `<span class="risk-count rc-green">${green.length} GREEN</span>`;
+    html += `</div><div class="risk-cards">`;
+
+    cards.forEach((card, idx) => {
+      const lvl          = card.level.toLowerCase();
+      const panelId      = `ep-${rid}-${idx}`;
+      const rwPanelId    = `rp-${rid}-${idx}`;
+      const clauseForBtn = escHtml(card.quote || card.clauseType);
+      const dtForBtn     = escHtml(docType);
+      const isHighRisk   = card.level === 'RED' || card.level === 'AMBER';
+
+      html += `<div class="risk-card risk-${lvl}">
+        <div class="risk-card-header">
+          <span class="risk-badge rb-${lvl}">${card.level}</span>
+          <span class="risk-clause-type">${escHtml(card.clauseType)}</span>
+        </div>
+        ${card.quote
+          ? `<blockquote class="risk-quote">&ldquo;${escHtml(card.quote)}&rdquo;</blockquote>`
+          : ''}
+        ${card.explanation
+          ? `<div class="risk-explanation">${renderMarkdown(card.explanation)}</div>`
+          : ''}
+        <div class="explain-panel" id="${panelId}"></div>
+        ${isHighRisk ? `<div class="rewrite-panel" id="${rwPanelId}"></div>` : ''}
+        <div class="card-actions">
+          <button class="explain-btn"
+            data-panel="${panelId}"
+            data-clause="${clauseForBtn}"
+            data-doctype="${dtForBtn}">
+            ${EXPLAIN_ICON} Explain this clause
+          </button>
+          ${isHighRisk ? `<button class="rewrite-btn"
+            data-panel="${rwPanelId}"
+            data-clause="${clauseForBtn}"
+            data-doctype="${dtForBtn}"
+            data-level="${card.level}">
+            ${REWRITE_ICON} Rewrite this clause
+          </button>` : ''}
+        </div>
+      </div>`;
+    });
+
+    html += `</div>`;
+  }
+
+  if (invitePart.trim())
+    html += `<div class="risk-invite">${renderMarkdown(invitePart)}</div>`;
+
+  return html;
+}
+
+/* ─── File Upload ────────────────────────────────────────────────────── */
+let documentText = '';
+
+function triggerFileInput() {
+  document.getElementById('fileInput').click();
+}
+
+function handleFileInputChange(e) {
+  const file = e.target.files[0];
+  if (file) handleFileSelect(file);
+  e.target.value = ''; // reset so same file can be re-selected
+}
+
+function handleFileSelect(file) {
+  clearFileError();
+  hideFilePreview();
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext !== 'pdf' && ext !== 'docx') {
+    showFileError('Unsupported file type. Please upload a PDF or DOCX file.');
+    return;
+  }
+
+  uploadFile(file);
+}
+
+async function uploadFile(file) {
+  showFileLoading();
+  documentText = '';
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res  = await fetch('/upload', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (data.error) { showFileError(data.error); return; }
+
+    documentText = data.text;
+    showFilePreview(file.name, file.size, data.pages);
+
+  } catch (_) {
+    showFileError('Connection error. Could not read the file.');
+  } finally {
+    hideFileLoading();
+  }
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024)        return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function showFileLoading() {
+  document.getElementById('fileLoadingCard').classList.add('visible');
+}
+function hideFileLoading() {
+  document.getElementById('fileLoadingCard').classList.remove('visible');
+}
+
+function showFilePreview(name, size, pages) {
+  document.getElementById('previewFileName').textContent = name;
+  document.getElementById('previewFileMeta').textContent =
+    formatBytes(size) + (pages ? ' · ' + pages + ' section' + (pages !== 1 ? 's' : '') + ' extracted' : '');
+  document.getElementById('filePreviewCard').classList.add('visible');
+  document.getElementById('uploadBtn').classList.add('has-file');
+}
+function hideFilePreview() {
+  document.getElementById('filePreviewCard').classList.remove('visible');
+  document.getElementById('uploadBtn').classList.remove('has-file');
+}
+
+function showFileError(msg) {
+  document.getElementById('fileErrorMsg').textContent = msg;
+  document.getElementById('fileErrorCard').classList.add('visible');
+}
+function clearFileError() {
+  document.getElementById('fileErrorCard').classList.remove('visible');
+}
+
+function clearFile() {
+  documentText = '';
+  hideFilePreview();
+  clearFileError();
+}
+
+/* Drag-and-drop */
+(function () {
+  const chatMain   = document.getElementById('chatMain');
+  const overlay    = document.getElementById('dragOverlay');
+  let dragCounter  = 0;
+
+  chatMain.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    overlay.classList.add('active');
+  });
+
+  chatMain.addEventListener('dragover', (e) => { e.preventDefault(); });
+
+  chatMain.addEventListener('dragleave', () => {
+    dragCounter--;
+    if (dragCounter <= 0) { dragCounter = 0; overlay.classList.remove('active'); }
+  });
+
+  chatMain.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    overlay.classList.remove('active');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileSelect(file);
+  });
+})();
+
+/* ─── Pro modal ─────────────────────────────────────────────────────── */
+function showProModal() {
+  document.getElementById('proModalBackdrop').classList.add('visible');
+}
+function hideProModal(e) {
+  if (e && e.target !== document.getElementById('proModalBackdrop')) return;
+  document.getElementById('proModalBackdrop').classList.remove('visible');
+}
+function handleProUpgrade() {
+  document.getElementById('proModalBackdrop').classList.remove('visible');
+  // Switch user to Pro provider tab as a quick path
+  setProvider('anthropic');
+  showToast('Switched to Pro mode — add your Anthropic API key to unlock full Pro features');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('proModalBackdrop').classList.remove('visible');
+});
+
+/* ─── Rewrite clause ─────────────────────────────────────────────────── */
+const REWRITE_ICON_BTN  = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
+const COLLAPSE_ICON_BTN = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>`;
+const COPY_SMALL_ICON   = `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`;
+
+function setRewriteLoading(btn, loading) {
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? `<span class="spinner-sm"></span> Generating…`
+    : `${REWRITE_ICON_BTN} Rewrite this clause`;
+}
+
+function parseRewriteResponse(text) {
+  const headers = [
+    { key: 'clause',   re: /\*{0,2}REWRITTEN CLAUSE\*{0,2}/i },
+    { key: 'changed',  re: /\*{0,2}WHAT CHANGED\*{0,2}/i },
+    { key: 'email',    re: /\*{0,2}EMAIL SCRIPT\*{0,2}/i },
+    { key: 'fallback', re: /\*{0,2}FALLBACK\*{0,2}/i },
+  ];
+  const found = [];
+  for (const { key, re } of headers) {
+    const m = re.exec(text);
+    if (m) found.push({ key, matchEnd: m.index + m[0].length, matchStart: m.index });
+  }
+  found.sort((a, b) => a.matchStart - b.matchStart);
+  const result = {};
+  for (let i = 0; i < found.length; i++) {
+    const start = found[i].matchEnd;
+    const end   = i + 1 < found.length ? found[i + 1].matchStart : text.length;
+    result[found[i].key] = text.slice(start, end).replace(/^[\s\n:]+/, '').trim();
+  }
+  return result;
+}
+
+function renderRewritePanel(sections) {
+  const items = [
+    { key: 'clause',   label: 'Rewritten Clause',  copyable: true  },
+    { key: 'changed',  label: 'What Changed',       copyable: false },
+    { key: 'email',    label: 'Email Script',        copyable: true  },
+    { key: 'fallback', label: 'Fallback Position',   copyable: false },
+  ];
+  let html = '<div class="rewrite-sections">';
+  for (const { key, label, copyable } of items) {
+    const content = sections[key] || '';
+    if (!content) continue;
+    let copyBtn = '';
+    if (copyable) {
+      const storeIdx = rewriteCopyStore.push(content) - 1;
+      copyBtn = `<button class="rewrite-copy-btn" data-copy-idx="${storeIdx}" title="Copy to clipboard">
+        ${COPY_SMALL_ICON} Copy
+      </button>`;
+    }
+    html += `<div class="rewrite-section rs-${key}">
+      <div class="rewrite-section-header">
+        <span class="rewrite-section-label">${label}</span>
+        ${copyBtn}
+      </div>
+      <div class="rewrite-section-body">${renderMarkdown(content)}</div>
+    </div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+async function toggleRewrite(btn) {
+  if (selectedProvider !== 'anthropic') {
+    showProModal();
+    return;
+  }
+
+  const panel = document.getElementById(btn.dataset.panel);
+  if (!panel) return;
+
+  // Collapse if open
+  if (panel.classList.contains('visible')) {
+    panel.classList.remove('visible');
+    btn.classList.remove('open');
+    btn.innerHTML = `${REWRITE_ICON_BTN} Rewrite this clause`;
+    return;
+  }
+
+  // Re-expand from cache
+  if (panel.dataset.loaded) {
+    panel.classList.add('visible');
+    btn.classList.add('open');
+    btn.innerHTML = `${COLLAPSE_ICON_BTN} Hide rewrite`;
+    return;
+  }
+
+  // Fetch + stream
+  setRewriteLoading(btn, true);
+  panel.classList.add('visible');
+  panel.innerHTML = `<div class="rewrite-streaming"><span class="spinner-sm"></span> Generating counter-clause…</div>`;
+
+  try {
+    const res = await fetch('/rewrite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clause:    btn.dataset.clause,
+        docType:   btn.dataset.doctype,
+        riskLevel: btn.dataset.level,
+      }),
+    });
+
+    if (!res.ok) {
+      panel.innerHTML = '<div class="rewrite-streaming"><em>Could not generate rewrite. Please try again.</em></div>';
+      setRewriteLoading(btn, false);
+      return;
+    }
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '', full = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split('\n\n');
+      buffer = parts.pop();
+      for (const part of parts) {
+        if (!part.startsWith('data:')) continue;
+        let evt;
+        try { evt = JSON.parse(part.slice(5).trim()); } catch { continue; }
+        if (evt.chunk) {
+          full += evt.chunk;
+          panel.innerHTML = `<div class="rewrite-streaming">${renderMarkdown(full)}</div>`;
+        } else if (evt.error) {
+          panel.innerHTML = `<div class="rewrite-streaming"><em>${escHtml(evt.error)}</em></div>`;
+        } else if (evt.done) {
+          const sections = parseRewriteResponse(full);
+          panel.innerHTML = renderRewritePanel(sections);
+          panel.dataset.loaded = '1';
+          btn.classList.add('open');
+          btn.innerHTML = `${COLLAPSE_ICON_BTN} Hide rewrite`;
+          setRewriteLoading(btn, false);
+          btn.disabled = false;
+        }
+      }
+    }
+  } catch {
+    panel.innerHTML = '<div class="rewrite-streaming"><em>Network error. Please try again.</em></div>';
+    setRewriteLoading(btn, false);
+  }
+}
+
+/* ─── Explain clause ────────────────────────────────────────────────── */
+const EXPLAIN_ICON_BTN = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+const HIDE_ICON_BTN    = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>`;
+
+function setExplainLoading(btn, loading) {
+  btn.disabled = loading;
+  if (loading) {
+    btn.innerHTML = `<span class="spinner-sm"></span> Explaining…`;
+  } else {
+    btn.innerHTML = `${EXPLAIN_ICON_BTN} Explain this clause`;
+  }
+}
+
+async function toggleExplain(btn) {
+  const panel = document.getElementById(btn.dataset.panel);
+  if (!panel) return;
+
+  // Collapse if already open
+  if (panel.classList.contains('visible')) {
+    panel.classList.remove('visible');
+    btn.classList.remove('open');
+    btn.innerHTML = `${EXPLAIN_ICON_BTN} Explain this clause`;
+    return;
+  }
+
+  // Re-expand from cache
+  if (panel.dataset.loaded) {
+    panel.classList.add('visible');
+    btn.classList.add('open');
+    btn.innerHTML = `${HIDE_ICON_BTN} Hide explanation`;
+    return;
+  }
+
+  // Fetch and stream explanation
+  setExplainLoading(btn, true);
+  panel.classList.add('visible');
+  panel.innerHTML = '<span class="spinner-sm"></span>';
+
+  try {
+    const res = await fetch('/explain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clause: btn.dataset.clause, docType: btn.dataset.doctype }),
+    });
+
+    if (!res.ok) {
+      panel.innerHTML = '<em>Could not load explanation. Please try again.</em>';
+      setExplainLoading(btn, false);
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let full = '';
+
+    panel.innerHTML = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split('\n\n');
+      buffer = parts.pop();
+      for (const part of parts) {
+        if (!part.startsWith('data:')) continue;
+        let evt;
+        try { evt = JSON.parse(part.slice(5).trim()); } catch { continue; }
+        if (evt.chunk) {
+          full += evt.chunk;
+          panel.innerHTML = renderMarkdown(full);
+        } else if (evt.error) {
+          panel.innerHTML = `<em>${escHtml(evt.error)}</em>`;
+        } else if (evt.done) {
+          panel.dataset.loaded = '1';
+          btn.classList.add('open');
+          btn.innerHTML = `${HIDE_ICON_BTN} Hide explanation`;
+          setExplainLoading(btn, false);
+          btn.disabled = false;
+        }
+      }
+    }
+  } catch {
+    panel.innerHTML = '<em>Network error. Please try again.</em>';
+    setExplainLoading(btn, false);
+  }
 }
 
 /* ─── Toast ─────────────────────────────────────────────────────────── */

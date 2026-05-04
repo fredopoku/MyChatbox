@@ -32,21 +32,19 @@ except ImportError:
 # In-memory conversation store keyed by session_id.
 conversations: dict[str, list] = {}
 
-SYSTEM_PROMPT = """You are JKRAA, a helpful, knowledgeable, and friendly AI assistant built by Fred.
+SYSTEM_PROMPT = """You are Zane, an expert AI contract and legal document analyst. You help individuals, freelancers, and small business owners understand, analyse, and negotiate contracts and legal documents without needing a lawyer. Be direct, plain-spoken, and explain complex legal language like a smart friend who knows the law. Never use jargon without explaining it. Always clarify you are not a lawyer and this is not legal advice.
 
-You provide clear, accurate, and thoughtful responses. You can help with:
-- Programming and debugging across all languages
-- Data analysis and mathematics
-- Writing, editing, and summarisation
-- Research and factual questions
-- Creative brainstorming and ideation
-- Explanations of complex topics
+When a user shares document text always do these steps automatically:
+Step 1 - Identify: state the document type, jurisdiction, and both parties
+Step 2 - Summarise: plain-English overview under 300 words
+Step 3 - Risk flags: list all red and amber clauses with risk level, plain-English explanation, and worst-case scenario. Risk levels are RED (dangerous, financial loss, strips rights), AMBER (unusual or one-sided), GREEN (standard clause)
+Step 4 - Invite action: ask if the user wants any clauses rewritten or has questions
 
-Guidelines:
-- Format responses with Markdown when it improves clarity (headings, lists, bold, etc.)
-- Always use fenced code blocks with the language name (e.g. ```python) for any code
-- Be concise and direct; avoid unnecessary filler phrases
-- If you are uncertain, say so honestly rather than guessing"""
+Always check for: IP assignment, non-compete, auto-renewal, liability caps, payment terms, termination clauses, jurisdiction, confidentiality.
+
+For UK documents reference Consumer Rights Act 2015 and Unfair Contract Terms Act 1977. For US documents reference relevant state law. For EU documents reference EU consumer protection directives.
+
+Always end with: Zane provides document analysis and plain-English explanations, not legal advice. For significant contracts consider having a solicitor review before signing."""
 
 
 @app.route("/")
@@ -166,12 +164,187 @@ def chat():
     )
 
 
+@app.route("/upload", methods=["POST"])
+def upload():
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided."}), 400
+
+    file = request.files["file"]
+    filename = file.filename or ""
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+
+    if ext not in ("pdf", "docx"):
+        return jsonify({"error": "Unsupported file type. Please upload a PDF or DOCX file."}), 400
+
+    # 20 MB guard
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+    if size > 20 * 1024 * 1024:
+        return jsonify({"error": "File is too large. Maximum size is 20 MB."}), 413
+
+    try:
+        if ext == "pdf":
+            import pdfplumber
+            with pdfplumber.open(file) as pdf:
+                pages = [page.extract_text() or "" for page in pdf.pages]
+            text = "\n\n".join(p for p in pages if p.strip())
+        else:
+            import docx as docx_lib
+            doc = docx_lib.Document(file)
+            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+            text = "\n\n".join(paragraphs)
+
+        if not text.strip():
+            return jsonify({
+                "error": "No readable text found. The file may be image-based or scanned."
+            }), 422
+
+        return jsonify({"text": text, "filename": filename, "pages": len(text.split("\n\n"))})
+
+    except Exception as e:
+        return jsonify({"error": f"Could not read file: {str(e)}"}), 500
+
+
 @app.route("/clear", methods=["POST"])
 def clear():
     session_id = session.get("session_id")
     if session_id and session_id in conversations:
         conversations[session_id] = []
     return jsonify({"status": "cleared"})
+
+
+@app.route("/explain", methods=["POST"])
+def explain():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    clause   = str(data.get("clause", "")).strip()
+    doc_type = str(data.get("docType", "contract document")).strip()
+
+    if not clause:
+        return jsonify({"error": "No clause text provided"}), 400
+
+    system = (
+        "Explain the following contract clause in 3-4 plain sentences. "
+        "Use simple language and no jargon. "
+        "Give one concrete real-world example of how this clause could affect the user. "
+        "End with a one-line verdict: is this clause normal, unusual, or concerning for this type of document?"
+    )
+    user_msg = f'Document type: {doc_type}\n\nClause: "{clause}"'
+
+    def generate():
+        if groq_client:
+            try:
+                stream = groq_client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user",   "content": user_msg},
+                    ],
+                    max_tokens=500,
+                    stream=True,
+                )
+                for chunk in stream:
+                    text = chunk.choices[0].delta.content or ""
+                    if text:
+                        yield f"data: {json.dumps({'chunk': text})}\n\n"
+                yield f"data: {json.dumps({'done': True})}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+        elif anthropic_client:
+            try:
+                with anthropic_client.messages.stream(
+                    model="claude-opus-4-7",
+                    max_tokens=500,
+                    system=system,
+                    messages=[{"role": "user", "content": user_msg}],
+                ) as stream:
+                    for text in stream.text_stream:
+                        yield f"data: {json.dumps({'chunk': text})}\n\n"
+                    yield f"data: {json.dumps({'done': True})}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        else:
+            yield f"data: {json.dumps({'error': 'No provider configured.'})}\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"},
+    )
+
+
+@app.route("/rewrite", methods=["POST"])
+def rewrite():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    clause     = str(data.get("clause", "")).strip()
+    doc_type   = str(data.get("docType", "contract document")).strip()
+    risk_level = str(data.get("riskLevel", "")).strip()
+
+    if not clause:
+        return jsonify({"error": "No clause text provided"}), 400
+
+    system = (
+        "You are a legal document expert. Rewrite the following unfair contract clause "
+        "into a balanced alternative that protects the signing party. The rewrite must be "
+        "legally coherent, realistic to request, and written in the same style and formality "
+        "as the original.\n\n"
+        "Structure your response with exactly these four clearly labelled sections:\n\n"
+        "**REWRITTEN CLAUSE**\n[the fairer replacement text only]\n\n"
+        "**WHAT CHANGED**\n[2 sentences explaining what changed and why it is now balanced]\n\n"
+        "**EMAIL SCRIPT**\n[a short 3-sentence professional email proposing this change in a "
+        "confident but collaborative tone — start with 'Dear [Name],']\n\n"
+        "**FALLBACK**\n[the minimum acceptable compromise if the other party rejects the full rewrite]"
+    )
+    user_msg = f"Document type: {doc_type}\nRisk level: {risk_level}\n\nClause to rewrite:\n\"{clause}\""
+
+    def generate():
+        if groq_client:
+            try:
+                stream = groq_client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user",   "content": user_msg},
+                    ],
+                    max_tokens=1200,
+                    stream=True,
+                )
+                for chunk in stream:
+                    text = chunk.choices[0].delta.content or ""
+                    if text:
+                        yield f"data: {json.dumps({'chunk': text})}\n\n"
+                yield f"data: {json.dumps({'done': True})}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+        elif anthropic_client:
+            try:
+                with anthropic_client.messages.stream(
+                    model="claude-opus-4-7",
+                    max_tokens=1200,
+                    system=system,
+                    messages=[{"role": "user", "content": user_msg}],
+                ) as stream:
+                    for text in stream.text_stream:
+                        yield f"data: {json.dumps({'chunk': text})}\n\n"
+                    yield f"data: {json.dumps({'done': True})}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        else:
+            yield f"data: {json.dumps({'error': 'No provider configured.'})}\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"},
+    )
 
 
 @app.route("/pop", methods=["POST"])
