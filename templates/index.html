@@ -14,11 +14,13 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 /* ─── Design Tokens ──────────────────────────────────────────────────── */
 :root {
   --sidebar-w:    270px;
+  --hist-w:       260px;
   --header-h:     64px;
   --bg:           #f0f4ff;
   --sidebar-bg:   #ffffff;
@@ -295,6 +297,7 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 800; color: #fff; letter-spacing: -.5px;
 }
+.header-avatar-img { width: 36px; height: 36px; object-fit: contain; border-radius: 10px; flex-shrink: 0; }
 
 .header-name-group { display: flex; flex-direction: column; line-height: 1.25; }
 .header-title      { font-size: 16px; font-weight: 700; }
@@ -426,7 +429,7 @@ body {
   font-size: 12px; font-weight: 800; color: #fff; letter-spacing: -.5px;
 }
 .user-avatar { background: linear-gradient(135deg, #1e50d8, #0d2fa8); }
-.bot-avatar  { background: var(--brand-grad); }
+.bot-avatar  { background: var(--brand-grad) url('/static/logo.png?v=2') center/contain no-repeat; font-size: 0; }
 
 .msg-content {
   flex: 1; min-width: 0;
@@ -716,6 +719,60 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
   color: #22c55e; font-weight: 600; font-size: 14px;
   margin-bottom: 14px;
 }
+
+/* ─── Risk overview badge ───────────────────────────────────────────── */
+.risk-overview-badge {
+  padding: 14px 16px;
+  border-radius: 12px; border: 1px solid;
+  margin-bottom: 16px;
+  animation: msgIn .2s ease both;
+}
+.rob-red   { background: rgba(239,68,68,.07);  border-color: rgba(239,68,68,.3); }
+.rob-amber { background: rgba(245,158,11,.07); border-color: rgba(245,158,11,.3); }
+.rob-green { background: rgba(34,197,94,.07);  border-color: rgba(34,197,94,.3); }
+
+.rob-top {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.rob-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rob-doc-name {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;
+}
+.rob-doc-type { font-size: 11px; color: var(--text-2); }
+
+.rob-verdict {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; flex-shrink: 0; white-space: nowrap;
+}
+.rob-verdict-red   { background: rgba(239,68,68,.15);  color: #dc2626; border: 1px solid rgba(239,68,68,.35); }
+.rob-verdict-amber { background: rgba(245,158,11,.15); color: #d97706; border: 1px solid rgba(245,158,11,.35); }
+.rob-verdict-green { background: rgba(34,197,94,.15);  color: #16a34a; border: 1px solid rgba(34,197,94,.35); }
+
+.rob-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ─── Report action bar ─────────────────────────────────────────────── */
+.report-actions-bar {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.report-action-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: var(--card-bg); color: var(--text-2);
+  font-size: 12px; font-weight: 500; font-family: inherit;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.report-action-btn:hover { background: var(--border); color: var(--text); }
+.report-action-btn.rba-pdf {
+  border-color: rgba(26,63,204,.35);
+  color: var(--accent); background: var(--accent-muted);
+}
+.report-action-btn.rba-pdf:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 .risk-cards { display: flex; flex-direction: column; gap: 10px; }
 
@@ -1043,6 +1100,131 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
 .drag-overlay-sub    { font-size: 13px; opacity: .7; }
 
 /* ─── Mobile ─────────────────────────────────────────────────────────── */
+/* ─── Document History Sidebar ──────────────────────────────────────── */
+.doc-hist-sidebar {
+  width: var(--hist-w); min-width: var(--hist-w);
+  background: var(--sidebar-bg);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transition: width .28s ease, min-width .28s ease, border-color .28s;
+  z-index: 50;
+}
+.doc-hist-sidebar.closed {
+  width: 0; min-width: 0;
+  border-left-color: transparent;
+}
+
+.dh-inner {
+  width: var(--hist-w); min-width: var(--hist-w);
+  display: flex; flex-direction: column;
+  height: 100%; overflow: hidden;
+}
+
+.dh-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.dh-title {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .07em;
+  color: var(--text-3);
+}
+.dh-close-btn {
+  background: transparent; border: none;
+  color: var(--text-2); cursor: pointer;
+  padding: 4px; border-radius: 5px;
+  display: flex; align-items: center;
+  transition: background .15s;
+}
+.dh-close-btn:hover { background: var(--border); }
+
+.dh-list {
+  flex: 1; overflow-y: auto;
+  padding: 6px 8px 4px;
+}
+.dh-empty {
+  padding: 28px 16px;
+  text-align: center; font-size: 13px; color: var(--text-3);
+  line-height: 1.7;
+}
+.dh-empty-icon { font-size: 28px; margin-bottom: 8px; display: block; opacity: .5; }
+
+.dh-entry {
+  padding: 10px 10px 8px;
+  border-radius: 8px; border: 1px solid transparent;
+  cursor: pointer; margin-bottom: 4px;
+  display: flex; flex-direction: column; gap: 3px;
+  position: relative;
+  transition: background .15s;
+}
+.dh-entry:hover { background: var(--border); }
+.dh-entry:hover .dh-del-btn { display: flex; }
+
+.dh-entry-name {
+  font-size: 12px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-right: 22px;
+}
+.dh-entry-date { font-size: 10px; color: var(--text-3); }
+.dh-entry-type {
+  font-size: 11px; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dh-entry-risks { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+.dh-risk-pill {
+  font-size: 9px; font-weight: 800; letter-spacing: .04em;
+  padding: 2px 6px; border-radius: 10px; line-height: 1.5;
+}
+.dh-r { background: rgba(239,68,68,.12);  color: #ef4444; }
+.dh-a { background: rgba(245,158,11,.12); color: #f59e0b; }
+.dh-g { background: rgba(34,197,94,.12);  color: #22c55e; }
+
+.dh-del-btn {
+  display: none;
+  position: absolute; top: 8px; right: 8px;
+  background: transparent; border: none;
+  color: var(--text-3); cursor: pointer;
+  padding: 2px; border-radius: 4px;
+  align-items: center;
+  transition: color .15s;
+}
+.dh-del-btn:hover { color: #ef4444; }
+
+.dh-footer {
+  border-top: 1px solid var(--border);
+  padding: 10px 12px;
+  flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.dh-upgrade-banner {
+  padding: 8px 10px;
+  background: linear-gradient(135deg, rgba(124,58,237,.07), rgba(168,85,247,.07));
+  border: 1px solid rgba(124,58,237,.25);
+  border-radius: 8px;
+  font-size: 11px; color: #7c3aed; line-height: 1.55;
+  text-align: center;
+}
+[data-theme="dark"] .dh-upgrade-banner { color: #a78bfa; }
+.dh-upgrade-link {
+  display: inline-block; margin-top: 3px;
+  font-weight: 600; cursor: pointer;
+  text-decoration: underline;
+}
+.dh-clear-btn {
+  width: 100%; padding: 8px;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: transparent; color: var(--text-2);
+  font-size: 12px; font-family: inherit; cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.dh-clear-btn:hover {
+  background: rgba(239,68,68,.08);
+  color: #ef4444; border-color: rgba(239,68,68,.3);
+}
+
 @media (max-width: 768px) {
   .sidebar {
     position: fixed; top: 0; left: 0; height: 100%;
@@ -1057,6 +1239,406 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
   .message { padding: 16px; }
   .input-area { padding: 10px 14px 14px; }
   .header-status { display: none; }
+  .doc-hist-sidebar {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    transform: translateX(100%);
+    width: var(--hist-w) !important; min-width: var(--hist-w) !important;
+    border-left-color: var(--border) !important;
+    transition: transform .28s ease;
+    box-shadow: -4px 0 24px rgba(0,0,0,.35);
+    z-index: 200;
+  }
+  .doc-hist-sidebar.open  { transform: translateX(0); }
+  .doc-hist-sidebar.closed { transform: translateX(100%); }
+}
+
+/* ─── Pro Upgrade Page ───────────────────────────────────────────── */
+.pro-page-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(4,8,28,.72);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: flex-start; justify-content: center;
+  overflow-y: auto; padding: 32px 16px 60px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .22s;
+}
+.pro-page-overlay.open { opacity: 1; pointer-events: all; }
+
+.pro-page-card {
+  background: var(--card-bg);
+  border-radius: 24px;
+  width: 100%; max-width: 780px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(4,8,60,.35);
+  transform: translateY(16px);
+  transition: transform .3s cubic-bezier(.22,1,.36,1);
+  position: relative;
+}
+.pro-page-overlay.open .pro-page-card { transform: translateY(0); }
+
+.pro-page-close {
+  position: absolute; top: 16px; right: 16px; z-index: 10;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: none; cursor: pointer;
+  background: rgba(255,255,255,.15); color: #fff;
+  font-size: 18px; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.pro-page-close:hover { background: rgba(255,255,255,.28); }
+
+/* Hero */
+.pro-hero {
+  background: linear-gradient(135deg, #06103a 0%, #1a3fcc 60%, #4f1d96 100%);
+  padding: 48px 40px 40px;
+  text-align: center; color: #fff;
+}
+.pro-hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.15); border-radius: 20px;
+  padding: 5px 14px; font-size: 11px; font-weight: 800;
+  letter-spacing: .12em; text-transform: uppercase; color: #c4b5fd;
+  margin-bottom: 16px;
+}
+.pro-hero h2 { font-size: 32px; font-weight: 900; margin: 0 0 10px; letter-spacing: -.5px; }
+.pro-hero p  { font-size: 15px; color: rgba(255,255,255,.72); margin: 0; max-width: 440px; margin: 0 auto; }
+
+/* Pricing grid */
+.pro-pricing-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 20px; padding: 28px 28px 0;
+}
+.ppc {
+  border: 2px solid var(--border); border-radius: 16px;
+  padding: 24px; position: relative; transition: border-color .2s;
+}
+.ppc.featured {
+  border-color: #7c3aed;
+  background: linear-gradient(160deg, rgba(124,58,237,.05), transparent);
+}
+.ppc-popular {
+  position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(90deg, #7c3aed, #4f46e5);
+  color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .1em;
+  padding: 4px 14px; border-radius: 20px; text-transform: uppercase; white-space: nowrap;
+}
+.ppc-name  { font-size: 15px; font-weight: 700; color: var(--text-2); }
+.ppc-price { font-size: 34px; font-weight: 900; color: var(--text); margin: 8px 0 4px; line-height: 1; }
+.ppc-price span { font-size: 14px; font-weight: 500; color: var(--text-3); }
+.ppc-desc  { font-size: 12px; color: var(--text-3); margin-bottom: 20px; }
+.ppc-features { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 9px; }
+.ppc-features li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text); }
+.ppc-features li.off { color: var(--text-3); text-decoration: line-through; }
+.ppc-check { width: 16px; height: 16px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; margin-top: 1px; }
+.ppc-check.yes { background: #d1fae5; color: #065f46; }
+.ppc-check.no  { background: var(--border); color: var(--text-3); }
+.ppc-cta {
+  display: block; width: 100%; padding: 13px;
+  border-radius: 12px; font-size: 14px; font-weight: 700;
+  text-align: center; cursor: pointer; border: none;
+  transition: all .18s;
+}
+.ppc-cta.free { background: var(--bg); color: var(--text-2); border: 2px solid var(--border); cursor: default; }
+.ppc-cta.pro  {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff; box-shadow: 0 4px 20px rgba(124,58,237,.35);
+}
+.ppc-cta.pro:hover { box-shadow: 0 6px 28px rgba(124,58,237,.55); transform: translateY(-1px); }
+
+/* Promo code section */
+.pro-code-section {
+  padding: 20px 28px 28px;
+  border-top: 1px solid var(--border); margin-top: 20px;
+}
+.pro-code-label { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 10px; }
+.pro-code-hint  { font-size: 11px; color: var(--text-3); margin-top: 8px; }
+.pro-code-row   { display: flex; gap: 8px; }
+.pro-code-input {
+  flex: 1; padding: 11px 14px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--bg); color: var(--text);
+  font-size: 14px; font-family: 'SF Mono', monospace; letter-spacing: .05em;
+  outline: none; transition: border-color .15s;
+}
+.pro-code-input:focus { border-color: var(--accent); }
+.pro-code-input::placeholder { color: var(--text-3); font-family: inherit; letter-spacing: 0; }
+.pro-code-apply {
+  padding: 11px 20px; border-radius: 10px; border: none; cursor: pointer;
+  background: var(--accent); color: #fff; font-size: 14px; font-weight: 700;
+  transition: all .15s; white-space: nowrap;
+}
+.pro-code-apply:hover { background: var(--accent-hover); }
+.pro-code-apply:disabled { opacity: .6; cursor: not-allowed; }
+.pro-code-msg { font-size: 13px; margin-top: 8px; min-height: 18px; font-weight: 500; }
+.pro-code-msg.ok  { color: #059669; }
+.pro-code-msg.err { color: #dc2626; }
+
+/* Sidebar Pro status badge */
+.pro-status-badge {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; margin: 8px 0;
+  background: linear-gradient(135deg, rgba(124,58,237,.12), rgba(79,70,229,.08));
+  border: 1.5px solid rgba(124,58,237,.25);
+  border-radius: 12px; cursor: pointer; transition: all .15s;
+}
+.pro-status-badge:hover { border-color: rgba(124,58,237,.5); }
+.pro-status-icon { font-size: 16px; }
+.pro-status-info { flex: 1; }
+.pro-status-name { font-size: 12px; font-weight: 800; color: #7c3aed; letter-spacing: .05em; }
+.pro-status-sub  { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+.pro-status-manage { font-size: 10px; color: var(--text-3); font-weight: 600; }
+
+/* Pro manage modal */
+.pro-manage-overlay {
+  position: fixed; inset: 0; z-index: 2001;
+  background: rgba(4,8,28,.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .18s;
+}
+.pro-manage-overlay.open { opacity: 1; pointer-events: all; }
+.pro-manage-card {
+  background: var(--card-bg); border-radius: 20px;
+  padding: 32px; width: 340px; text-align: center;
+  box-shadow: 0 16px 60px rgba(4,8,60,.3);
+  transform: scale(.96); transition: transform .22s cubic-bezier(.22,1,.36,1);
+}
+.pro-manage-overlay.open .pro-manage-card { transform: scale(1); }
+.pro-manage-icon { font-size: 40px; margin-bottom: 12px; }
+.pro-manage-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+.pro-manage-sub   { font-size: 13px; color: var(--text-2); margin-bottom: 24px; }
+.pro-manage-code  { font-size: 12px; color: var(--text-3); font-family: monospace; margin-bottom: 20px; }
+.pro-manage-btns  { display: flex; flex-direction: column; gap: 10px; }
+.pro-manage-close { padding: 11px; border-radius: 10px; background: var(--accent); color: #fff; border: none; cursor: pointer; font-weight: 700; font-size: 14px; }
+.pro-manage-deactivate { padding: 10px; border-radius: 10px; background: transparent; color: #dc2626; border: 1.5px solid rgba(220,38,38,.25); cursor: pointer; font-size: 13px; font-weight: 600; }
+.pro-manage-deactivate:hover { background: rgba(220,38,38,.05); }
+
+@media (max-width: 640px) {
+  .pro-pricing-grid { grid-template-columns: 1fr; }
+  .pro-hero { padding: 36px 20px 28px; }
+  .pro-hero h2 { font-size: 24px; }
+  .pro-pricing-grid, .pro-code-section { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ─── Language Selector ──────────────────────────────────────────── */
+.lang-selector-wrap {
+  border-bottom: 1px solid var(--border);
+  padding: 4px 0;
+}
+.lang-btn {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px; background: transparent; border: none; cursor: pointer;
+  color: var(--text); font-size: 13px; border-radius: 0; transition: background .15s; text-align: left;
+}
+.lang-btn:hover { background: var(--accent-muted); }
+.lang-globe { font-size: 15px; flex-shrink: 0; }
+.lang-name  { flex: 1; font-weight: 500; }
+.lang-chevron { color: var(--text-3); transition: transform .2s; }
+.lang-btn.open .lang-chevron { transform: rotate(180deg); }
+.lang-dropdown { display: none; padding: 4px 8px 8px; max-height: 224px; overflow-y: auto; }
+.lang-dropdown.open { display: block; }
+.lang-option {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 13px; transition: background .12s; color: var(--text);
+}
+.lang-option:hover { background: var(--accent-muted); }
+.lang-option.active { color: var(--accent); font-weight: 600; }
+.lang-lock-badge {
+  font-size: 9px; font-weight: 800; letter-spacing: .05em;
+  background: linear-gradient(90deg,#7c3aed,#4f46e5); color: #fff;
+  padding: 2px 6px; border-radius: 6px;
+}
+
+/* ─── Timeline Panel ─────────────────────────────────────────────── */
+.timeline-panel {
+  margin: 2px 0 14px 52px;
+  background: var(--card-bg); border: 1.5px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  animation: fadeSlideUp .4s ease;
+}
+.timeline-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 20px 10px; border-bottom: 1px solid var(--border);
+  font-weight: 700; font-size: 14px;
+}
+.timeline-body { padding: 18px 20px; }
+.timeline-track { position: relative; padding-left: 20px; }
+.timeline-track::before {
+  content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px;
+  width: 2px; background: var(--border); border-radius: 2px;
+}
+.tl-item { position: relative; padding-bottom: 16px; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot {
+  position: absolute; left: -17px; top: 4px;
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid var(--card-bg); flex-shrink: 0;
+}
+.tl-dot.high   { background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.15); }
+.tl-dot.medium { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,.15); }
+.tl-dot.low    { background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,.15); }
+.tl-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tl-date  { font-size: 11px; color: var(--text-3); font-family: monospace; }
+.tl-type-badge {
+  font-size: 9px; font-weight: 800; letter-spacing: .07em;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 6px;
+}
+.tl-type-start    { background: #d1fae5; color: #065f46; }
+.tl-type-deadline { background: #fee2e2; color: #991b1b; }
+.tl-type-payment  { background: #fef3c7; color: #92400e; }
+.tl-type-renewal  { background: #e0e7ff; color: #3730a3; }
+.tl-type-notice   { background: #f3e8ff; color: #6d28d9; }
+.tl-type-other    { background: var(--accent-muted); color: var(--accent); }
+.tl-empty { font-size: 13px; color: var(--text-3); text-align: center; padding: 8px 0; }
+
+/* Pro feature lock panel */
+.pro-lock-panel {
+  margin: 2px 0 14px 52px;
+  border: 1.5px dashed var(--border); border-radius: 16px;
+  padding: 20px; text-align: center;
+}
+.pro-lock-icon { font-size: 28px; margin-bottom: 8px; }
+.pro-lock-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.pro-lock-sub { font-size: 12px; color: var(--text-3); margin-bottom: 12px; }
+.pro-lock-btn {
+  padding: 8px 20px; border-radius: 10px; border: none; cursor: pointer;
+  background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff;
+  font-size: 13px; font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .timeline-panel { margin-left: 0; }
+  .pro-lock-panel { margin-left: 0; }
+}
+
+/* ─── Contract Intelligence Panel ───────────────────────────────── */
+.intel-panel {
+  margin: 2px 0 14px 52px;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  animation: fadeSlideUp .4s ease;
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.intel-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 18px;
+  background: linear-gradient(90deg, rgba(26,63,204,.06), transparent);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 800; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: .1em;
+}
+.intel-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 16px; }
+
+/* Score row */
+.intel-score-row { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+.intel-gauge-wrap { flex-shrink: 0; text-align: center; }
+.intel-gauge-verdict { font-size: 11px; font-weight: 600; margin-top: 4px; }
+.intel-bars { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 7px; }
+.intel-bar-row { display: flex; align-items: center; gap: 8px; }
+.intel-bar-label { font-size: 11px; color: var(--text-2); width: 110px; flex-shrink: 0; }
+.intel-bar-track { flex: 1; height: 6px; background: var(--accent-muted); border-radius: 3px; overflow: hidden; }
+.intel-bar-fill { height: 100%; border-radius: 3px; transition: width 1.1s cubic-bezier(.22,1,.36,1); }
+.intel-bar-val { font-size: 11px; font-weight: 700; width: 24px; text-align: right; color: var(--text-2); }
+
+/* Doc stats row */
+.intel-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+.intel-stat-chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  background: var(--accent-muted); color: var(--accent);
+}
+
+/* Issues chips */
+.intel-issues { display: flex; gap: 7px; flex-wrap: wrap; }
+.intel-issue-chip {
+  padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  background: rgba(239,68,68,.08); color: #dc2626; border: 1px solid rgba(239,68,68,.2);
+}
+
+/* Section label */
+.intel-section-label {
+  font-size: 10px; font-weight: 800; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: .1em; margin-bottom: 7px;
+}
+
+/* Entity chips */
+.intel-entity-row { display: flex; flex-wrap: wrap; gap: 7px; }
+.e-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  cursor: default; transition: filter .15s;
+}
+.e-chip:hover { filter: brightness(.95); }
+.e-chip.party        { background: rgba(26,63,204,.09); color: var(--accent); }
+.e-chip.jurisdiction { background: rgba(124,58,237,.09); color: #7c3aed; }
+.e-chip.date         { background: rgba(217,119,6,.09);  color: #b45309; }
+.e-chip.amount       { background: rgba(5,150,105,.09);  color: #047857; }
+
+/* Obligations */
+.intel-obligations-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.intel-party-name { font-size: 12px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; }
+.intel-ob-list { list-style: none; padding: 0; margin: 0; }
+.intel-ob-list li {
+  font-size: 12px; color: var(--text); line-height: 1.5;
+  padding: 3px 0 3px 16px; position: relative;
+}
+.intel-ob-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-size: 11px; }
+
+/* Smart suggestions */
+.intel-suggestions { display: flex; flex-wrap: wrap; gap: 7px; }
+.intel-suggest-chip {
+  padding: 7px 13px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  border: 1.5px solid var(--border); background: var(--bg); color: var(--text-2);
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.intel-suggest-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-muted); }
+.intel-translate-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 10px; border: 1.5px solid var(--accent);
+  background: var(--accent-muted); color: var(--accent);
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
+}
+.intel-translate-btn:hover { background: var(--accent); color: #fff; }
+
+/* Intel loading skeleton */
+.intel-loading {
+  margin: 2px 0 14px 52px;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 16px; padding: 18px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 13px; color: var(--text-3);
+}
+
+/* Legal term glossary tooltip */
+.legal-term {
+  border-bottom: 1.5px dashed var(--accent);
+  cursor: help;
+  position: relative;
+}
+.legal-term::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%; transform: translateX(-50%);
+  background: #0f172a; color: #e2e8f0;
+  font-size: 12px; line-height: 1.5;
+  padding: 8px 12px; border-radius: 8px;
+  width: 230px; white-space: normal;
+  pointer-events: none;
+  opacity: 0; transition: opacity .15s;
+  z-index: 500; font-weight: 400;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+}
+.legal-term:hover::after { opacity: 1; }
+
+@media (max-width: 768px) {
+  .intel-panel, .intel-loading { margin-left: 0; }
+  .intel-obligations-grid { grid-template-columns: 1fr; }
+  .intel-score-row { flex-direction: column; }
 }
 </style>
 </head>
@@ -1067,7 +1649,8 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-top">
       <div class="brand">
-        <img src="/static/logo.png" class="brand-logo-img" alt="Zane"
+        <img src="/static/logo.png?v=2" class="brand-logo-img" alt="Zane"
+             onload="this.style.display='';document.getElementById('brandFallback').style.display='none'"
              onerror="this.style.display='none';document.getElementById('brandFallback').style.display='flex'">
         <div class="brand-logo" id="brandFallback" style="display:none">ZN</div>
         <div class="brand-info">
@@ -1089,10 +1672,32 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
         <span class="provider-dot groq"></span>
         Free
       </button>
-      <button class="provider-tab anthropic" id="tabAnthropic" onclick="setProvider('anthropic')">
+      <button class="provider-tab anthropic" id="tabAnthropic" onclick="handleProTabClick()">
         <span class="provider-dot anthropic"></span>
         Pro
       </button>
+    </div>
+
+    <!-- Pro status badge (shown when Pro is active) -->
+    <div class="pro-status-badge" id="proStatusBadge" style="display:none" onclick="showProManage()">
+      <span class="pro-status-icon">⚡</span>
+      <div class="pro-status-info">
+        <div class="pro-status-name">PRO ACTIVE</div>
+        <div class="pro-status-sub">Unlimited analysis &amp; rewrites</div>
+      </div>
+      <span class="pro-status-manage">Manage →</span>
+    </div>
+
+    <!-- Language selector -->
+    <div class="lang-selector-wrap">
+      <button class="lang-btn" id="langBtn" onclick="toggleLangDropdown()">
+        <span class="lang-globe">🌐</span>
+        <span class="lang-name" id="langCurrentName">English</span>
+        <svg class="lang-chevron" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div class="lang-dropdown" id="langDropdown"></div>
     </div>
 
     <div class="sidebar-section-label">Recent Chats</div>
@@ -1120,8 +1725,8 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
     </div>
   </aside>
 
-  <!-- Mobile overlay -->
-  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+  <!-- Mobile overlay (shared by both sidebars) -->
+  <div class="overlay" id="overlay" onclick="closeSidebar(); closeDocHist()"></div>
 
   <!-- Pro modal -->
   <div class="pro-modal-backdrop" id="proModalBackdrop" onclick="hideProModal(event)">
@@ -1136,6 +1741,90 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
       <div class="pro-modal-actions">
         <button class="pro-upgrade-btn" onclick="handleProUpgrade()">Upgrade to Pro</button>
         <button class="pro-dismiss-btn" onclick="hideProModal()">Not now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pro upgrade full-page overlay -->
+  <div class="pro-page-overlay" id="proPageOverlay">
+    <div class="pro-page-card">
+      <button class="pro-page-close" onclick="hideProUpgradePage()" aria-label="Close">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <div class="pro-hero">
+        <div class="pro-hero-eyebrow">⚡ ZANE PRO</div>
+        <h2>Unlock the Full Power of Zane</h2>
+        <p>Advanced AI analysis, unlimited document history, and clause rewriting — all included.</p>
+      </div>
+
+      <div class="pro-pricing-grid">
+        <!-- Free card -->
+        <div class="ppc">
+          <div class="ppc-name">Free</div>
+          <div class="ppc-price">£0<span>/mo</span></div>
+          <ul class="ppc-features">
+            <li>✓ AI document analysis</li>
+            <li>✓ Risk scoring &amp; health gauge</li>
+            <li>✓ 5-entry doc history</li>
+            <li>✓ Legal glossary tooltips</li>
+            <li>✓ Clause explanations</li>
+            <li class="off">✗ Multi-language (15 languages)</li>
+            <li class="off">✗ Clause rewriting</li>
+            <li class="off">✗ Contract Intelligence panel</li>
+            <li class="off">✗ Key dates &amp; timeline</li>
+            <li class="off">✗ Unlimited history</li>
+          </ul>
+          <button class="ppc-cta free" onclick="hideProUpgradePage()">Continue Free</button>
+        </div>
+
+        <!-- Pro card -->
+        <div class="ppc featured">
+          <div class="ppc-popular">MOST POPULAR</div>
+          <div class="ppc-name">Pro</div>
+          <div class="ppc-price">£9<span>/mo</span></div>
+          <ul class="ppc-features">
+            <li>✓ Everything in Free</li>
+            <li>✓ 15 languages — analyse &amp; translate</li>
+            <li>✓ AI clause rewriting + email scripts</li>
+            <li>✓ Contract Intelligence panel</li>
+            <li>✓ Key dates &amp; timeline view</li>
+            <li>✓ Entity &amp; obligation extraction</li>
+            <li>✓ Unlimited document history</li>
+            <li>✓ Priority Claude Opus 4.7 AI</li>
+            <li>✓ PDF &amp; DOCX export</li>
+          </ul>
+          <button class="ppc-cta pro" onclick="document.getElementById('proCodeInput').focus()">Get Pro with a Code</button>
+        </div>
+      </div>
+
+      <!-- Promo code section -->
+      <div class="pro-code-section">
+        <div class="pro-code-label">Have a promo or beta code?</div>
+        <div class="pro-code-row">
+          <input class="pro-code-input" id="proCodeInput" type="text" placeholder="Enter code e.g. ZANE2024"
+            autocomplete="off" spellcheck="false"
+            onkeydown="if(event.key==='Enter') validateProCode()"/>
+          <button class="pro-code-apply" id="proCodeApplyBtn" onclick="validateProCode()">Apply</button>
+        </div>
+        <div class="pro-code-msg" id="proCodeMsg"></div>
+        <p class="pro-code-hint">Codes are case-insensitive. Contact us if you need help.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pro manage modal -->
+  <div class="pro-manage-overlay" id="proManageOverlay" onclick="if(event.target===this)hideProManage()">
+    <div class="pro-manage-card">
+      <div class="pro-manage-icon">⚡</div>
+      <div class="pro-manage-title">Zane Pro Active</div>
+      <div class="pro-manage-sub">You have access to all Pro features.</div>
+      <div class="pro-manage-code" id="proManageCode"></div>
+      <div class="pro-manage-btns">
+        <button class="pro-manage-close" onclick="hideProManage()">Done</button>
+        <button class="pro-manage-deactivate" onclick="if(confirm('Deactivate Pro? You will lose access to Pro features.'))deactivatePro()">Deactivate Pro</button>
       </div>
     </div>
   </div>
@@ -1159,7 +1848,10 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
           </svg>
         </button>
         <div class="header-brand">
-          <div class="header-avatar">ZN</div>
+          <img src="/static/logo.png?v=2" class="header-avatar-img" alt="Zane"
+               onload="document.getElementById('headerAvatarFallback').style.display='none'"
+               onerror="this.style.display='none';document.getElementById('headerAvatarFallback').style.display='flex'">
+          <div class="header-avatar" id="headerAvatarFallback" style="display:none">ZN</div>
           <div class="header-name-group">
             <span class="header-title">Zane</span>
             <span class="header-status" id="headerStatus">Free Mode · Online</span>
@@ -1167,6 +1859,12 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
         </div>
       </div>
       <div class="header-actions">
+        <button class="header-btn" id="histToggleBtn" onclick="toggleDocHist()" title="Document history">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          History
+        </button>
         <button class="header-btn" onclick="exportChat()">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -1186,7 +1884,8 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
     <div class="messages-wrap" id="messagesWrap">
       <!-- Welcome -->
       <div class="welcome" id="welcome">
-        <img src="/static/logo.png" class="welcome-logo-img" alt="Zane"
+        <img src="/static/logo.png?v=2" class="welcome-logo-img" alt="Zane"
+             onload="this.style.display='';document.getElementById('welcomeFallback').style.display='none'"
              onerror="this.style.display='none';document.getElementById('welcomeFallback').style.display='flex'">
         <div class="welcome-logo-inner" id="welcomeFallback" style="display:none">ZN</div>
         <div class="welcome-badge">
@@ -1291,6 +1990,29 @@ pre code.hljs   { padding: 14px 18px; font-size: 13px; }
       </div>
     </div>
   </main>
+
+  <!-- ─── Document History Sidebar (right) ───────────────────────── -->
+  <aside class="doc-hist-sidebar closed" id="docHistSidebar">
+    <div class="dh-inner">
+      <div class="dh-header">
+        <span class="dh-title">Document History</span>
+        <button class="dh-close-btn" onclick="closeDocHist()" title="Close">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="dh-list" id="dhList">
+        <div class="dh-empty">
+          <span class="dh-empty-icon">🗂</span>
+          No document history yet.<br>Analyse a document to get started.
+        </div>
+      </div>
+      <div class="dh-footer" id="dhFooter">
+        <button class="dh-clear-btn" onclick="clearDocHistory()">Clear all history</button>
+      </div>
+    </div>
+  </aside>
 </div>
 
 <div id="toast"></div>
@@ -1356,37 +2078,66 @@ document.addEventListener('click', function(e) {
   const rewriteBtn = e.target.closest('.rewrite-btn');
   if (rewriteBtn && !rewriteBtn.disabled) toggleRewrite(rewriteBtn);
 
+  const reportBtn = e.target.closest('.report-action-btn');
+  if (reportBtn) {
+    const rid = parseInt(reportBtn.dataset.rid, 10);
+    if (!isNaN(rid)) {
+      if (reportBtn.dataset.action === 'pdf') exportAnalysisPDF(rid);
+      else if (reportBtn.dataset.action === 'copy-report') copyFullReport(rid);
+    }
+  }
+
   const rwCopyBtn = e.target.closest('.rewrite-copy-btn');
   if (rwCopyBtn) {
     const idx = parseInt(rwCopyBtn.dataset.copyIdx, 10);
-    navigator.clipboard.writeText(rewriteCopyStore[idx] || '').then(() => {
-      const prev = rwCopyBtn.innerHTML;
-      rwCopyBtn.textContent = '✓ Copied!';
-      setTimeout(() => { rwCopyBtn.innerHTML = prev; }, 2000);
-    });
+    if (!isNaN(idx)) {
+      navigator.clipboard.writeText(rewriteCopyStore[idx] || '').then(() => {
+        const prev = rwCopyBtn.innerHTML;
+        rwCopyBtn.textContent = '✓ Copied!';
+        setTimeout(() => { rwCopyBtn.innerHTML = prev; }, 2000);
+      }).catch(() => showToast('Could not copy to clipboard'));
+    }
   }
+
+  // Intel suggestion chips (safer than inline onclick — handles quotes/special chars)
+  const suggestChip = e.target.closest('.intel-suggest-chip');
+  if (suggestChip) useSuggestion(suggestChip.dataset.suggestion || '');
 });
 
 /* ─── State ─────────────────────────────────────────────────────────── */
 let isStreaming        = false;
-let riskRenderCounter = 0;
-let selectedProvider = 'groq';
-let lastUserMessage = '';
-let currentChatId  = generateId();
-let chats          = loadChats();
+let riskRenderCounter  = 0;
+let selectedProvider   = 'groq';
+let selectedLanguage   = localStorage.getItem('zane_language') || 'en';
+let lastUserMessage    = '';
+let lastDocumentText   = '';
+let currentChatId      = generateId();
+let chats              = loadChats();
+let currentFilename    = '';
+let docHistOpen        = false;
+let langDropdownOpen   = false;
 const msgTexts         = new Map();
 const messageLog       = []; // [{role, text, model}] for export
 const rewriteCopyStore = [];
+const analysisStore    = new Map(); // rid → analysis snapshot for export
 
 const PROVIDER_LABELS = {
   groq:      { name: 'Free',  model: 'Free Mode',  badge: 'Free'  },
   anthropic: { name: 'Pro',   model: 'Pro Mode',   badge: 'Pro'   },
 };
 
+const LANGUAGES = {
+  en: 'English', fr: 'French', es: 'Spanish', pt: 'Portuguese',
+  de: 'German',  it: 'Italian', nl: 'Dutch',  ar: 'Arabic',
+  zh: 'Chinese', ja: 'Japanese', ko: 'Korean', hi: 'Hindi',
+  ru: 'Russian', pl: 'Polish',  tr: 'Turkish',
+};
+
 /* ─── Init ──────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
   applyTheme(getSavedTheme());
   renderChatList();
+  renderDocHistory();
 
   const saved = localStorage.getItem('provider');
   if (saved && PROVIDER_LABELS[saved]) selectedProvider = saved;
@@ -1403,13 +2154,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (selectedProvider === 'groq') selectedProvider = data.anthropic ? 'anthropic' : 'groq';
     }
     if (!data.anthropic) {
-      tabA.disabled = true;
-      tabA.title = 'Add ANTHROPIC_API_KEY to .env to enable';
+      // Keep Pro tab clickable so the upgrade page can open — just flag missing key
+      tabA.dataset.anthropicMissing = '1';
       if (selectedProvider === 'anthropic') selectedProvider = data.groq ? 'groq' : 'anthropic';
     }
   } catch (_) {}
 
   updateProviderUI();
+  renderProBadge();
+
+  // Restore language label
+  const savedLang = localStorage.getItem('zane_language') || 'en';
+  if (LANGUAGES[savedLang]) {
+    selectedLanguage = savedLang;
+    document.getElementById('langCurrentName').textContent = LANGUAGES[savedLang];
+  }
+
+  // Close language dropdown on outside click
+  document.addEventListener('click', e => {
+    if (langDropdownOpen && !e.target.closest('.lang-selector-wrap')) closeLangDropdown();
+  });
 
   document.getElementById('messagesWrap').addEventListener('scroll', () => {
     const w = document.getElementById('messagesWrap');
@@ -1422,10 +2186,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 /* ─── Provider ──────────────────────────────────────────────────────── */
 function setProvider(p) {
   const tab = document.getElementById(p === 'groq' ? 'tabGroq' : 'tabAnthropic');
-  if (tab.disabled) return;
+  if (tab.disabled || tab.dataset.anthropicMissing) return;
   selectedProvider = p;
   localStorage.setItem('provider', p);
   updateProviderUI();
+  renderDocHistory();
   showToast('Switched to ' + PROVIDER_LABELS[p].name);
 }
 
@@ -1474,6 +2239,7 @@ function closeSidebar() {
 
 /* ─── Input helpers ─────────────────────────────────────────────────── */
 function autoResize(el) {
+  if (!el) return;
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 200) + 'px';
 }
@@ -1484,15 +2250,17 @@ function handleKey(e) {
 
 function useSuggestion(text) {
   const input = document.getElementById('userInput');
+  if (!input || !text) return;
   input.value = text;
   autoResize(input);
+  input.focus();
   sendMessage();
 }
 
 /* ─── Scroll ────────────────────────────────────────────────────────── */
 function scrollToBottom() {
   const w = document.getElementById('messagesWrap');
-  w.scrollTop = w.scrollHeight;
+  if (w) w.scrollTop = w.scrollHeight;
 }
 
 /* ─── Utilities ─────────────────────────────────────────────────────── */
@@ -1612,6 +2380,9 @@ function updateBotEl(el, rawText, done, modelName) {
           Regenerate
         </button>`;
     }
+
+    // Apply legal term glossary tooltips to completed bot response
+    applyGlossaryTooltips(el.querySelector('.bot-markdown'));
   }
 
   const w = document.getElementById('messagesWrap');
@@ -1634,7 +2405,7 @@ async function doStream(botEl, userMessage) {
     const res = await fetch('/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: userMessage, provider: selectedProvider }),
+      body: JSON.stringify({ message: userMessage, provider: selectedProvider, language: selectedLanguage }),
     });
 
     if (!res.ok) { showBotError(botEl, `Server error ${res.status}. Please try again.`); return; }
@@ -1664,6 +2435,11 @@ async function doStream(botEl, userMessage) {
               updateBotEl(botEl, fullText, true, modelName);
               messageLog.push({ role: 'assistant', text: fullText, model: modelName });
               saveChatToHistory(lastUserMessage, fullText);
+              const parsedForHist = parseRiskCards(fullText);
+              if (parsedForHist) {
+                addDocHistEntry(fullText, currentFilename, parsedForHist);
+                fetchIntelligence(lastDocumentText || fullText, fullText, parsedForHist);
+              }
             } else if (data.error) {
               showBotError(botEl, data.error);
             }
@@ -1699,13 +2475,24 @@ async function sendMessage() {
   if (!text || isStreaming) return;
 
   isStreaming = true;
-  lastUserMessage = text;
   document.getElementById('sendBtn').disabled = true;
   input.value = '';
   input.style.height = 'auto';
 
+  // If a document is attached, prepend its content to the API message.
+  // The user's chat bubble shows only what they typed; the full context goes to the API.
+  const apiMessage = documentText
+    ? `${text}\n\n---\n\nDocument for analysis:\n\n${documentText}`
+    : text;
+
+  lastUserMessage  = apiMessage;
+  lastDocumentText = documentText; // saved before clearFile removes it
+
   addUserMessage(text);
-  await doStream(createBotMessageEl(), text);
+
+  if (documentText) clearFile();
+
+  await doStream(createBotMessageEl(), apiMessage);
 }
 
 /* ─── Regenerate ────────────────────────────────────────────────────── */
@@ -1734,6 +2521,7 @@ async function newChat() {
   currentChatId = generateId();
   messageLog.length = 0;
   lastUserMessage = '';
+  currentFilename = '';
   document.getElementById('messagesInner').innerHTML = '';
   document.getElementById('welcome').style.display = '';
   closeSidebar();
@@ -1743,6 +2531,7 @@ async function clearChat() {
   await fetch('/clear', { method: 'POST' });
   messageLog.length = 0;
   lastUserMessage = '';
+  currentFilename = '';
   document.getElementById('messagesInner').innerHTML = '';
   document.getElementById('welcome').style.display = '';
 }
@@ -1770,6 +2559,463 @@ function exportChat() {
   showToast('Chat exported');
 }
 
+/* ─── Legal Glossary Tooltips ───────────────────────────────────────── */
+const LEGAL_GLOSSARY = {
+  'indemnify':          'To compensate or protect a party against financial loss or legal claims.',
+  'indemnification':    'A contractual obligation to cover another party\'s losses or legal costs.',
+  'liability':          'Legal responsibility for harm, loss, or damage caused to another party.',
+  'force majeure':      'Unforeseeable events (e.g. natural disasters, war) that excuse non-performance.',
+  'non-compete':        'Prevents a party from working for competitors for a set time and geographic area.',
+  'non-solicitation':   'Prohibits recruiting or poaching employees or clients of the other party.',
+  'liquidated damages': 'A pre-agreed fixed sum payable if a specific breach of contract occurs.',
+  'intellectual property': 'Legal rights over creations of the mind — inventions, designs, creative works.',
+  'ip assignment':      'Transfer of intellectual property ownership from creator to another party.',
+  'arbitration':        'Private, binding dispute resolution outside of court by a neutral arbitrator.',
+  'jurisdiction':       'The courts and legal system that govern interpretation and enforcement of the contract.',
+  'governing law':      'The country or state whose laws apply to the contract.',
+  'termination for cause': 'Ending the contract due to the other party\'s material breach or misconduct.',
+  'termination for convenience': 'Either party can end the contract without needing a reason, with notice.',
+  'auto-renewal':       'The contract automatically extends unless one party cancels before a deadline.',
+  'severability':       'If one clause is found unenforceable, the rest of the contract still stands.',
+  'waiver':             'Voluntarily giving up a right under the contract — must usually be in writing.',
+  'confidentiality':    'Obligation to keep certain information private and not share it with others.',
+  'warranty':           'A binding promise or guarantee about the quality, truth, or status of something.',
+  'consideration':      'Something of value exchanged between parties to make the contract legally binding.',
+  'breach':             'Failure to fulfil a legal obligation under the contract.',
+  'notice period':      'Advance time required before terminating or changing the contract.',
+  'right of first refusal': 'A party\'s right to be offered a deal before it is offered to third parties.',
+  'limitation of liability': 'A clause capping the maximum financial exposure of one or both parties.',
+  'indemnity clause':   'Requires one party to compensate the other for specified losses or claims.',
+};
+
+function applyGlossaryTooltips(container) {
+  if (!container) return;
+  const terms = Object.keys(LEGAL_GLOSSARY).sort((a, b) => b.length - a.length);
+  const escaped = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const regex = new RegExp(`\\b(${escaped.join('|')})\\b`, 'gi');
+
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const skip = node.parentElement.closest(
+        '.legal-term, code, pre, .risk-card-level, .risk-badge, button, a, .model-badge'
+      );
+      return skip ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+  textNodes.forEach(node => {
+    const text = node.textContent;
+    if (!regex.test(text)) return;
+    regex.lastIndex = 0;
+
+    const frag = document.createDocumentFragment();
+    let last = 0, match;
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > last) frag.appendChild(document.createTextNode(text.slice(last, match.index)));
+      const span = document.createElement('span');
+      span.className = 'legal-term';
+      span.setAttribute('data-tip', LEGAL_GLOSSARY[match[0].toLowerCase()] || '');
+      span.textContent = match[0];
+      frag.appendChild(span);
+      last = regex.lastIndex;
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+
+/* ─── Contract Intelligence Panel ──────────────────────────────────── */
+function scoreColor(v) {
+  return v >= 80 ? '#16a34a' : v >= 65 ? '#d97706' : '#dc2626';
+}
+
+function renderScoreBar(label, v) {
+  const val = Math.max(0, Math.min(100, v || 0));
+  const color = scoreColor(val);
+  return `<div class="intel-bar-row">
+    <span class="intel-bar-label">${label}</span>
+    <div class="intel-bar-track">
+      <div class="intel-bar-fill" style="width:0%;background:${color}" data-target="${val}"></div>
+    </div>
+    <span class="intel-bar-val" style="color:${color}">${val}</span>
+  </div>`;
+}
+
+function computeDocStats(text) {
+  const words    = text.trim().split(/\s+/).filter(Boolean).length;
+  const readMin  = Math.max(1, Math.round(words / 250));
+  const clauses  = (text.match(/\b(clause|section|article|schedule)\b/gi) || []).length;
+  const avgSentLen = words / Math.max(1, (text.match(/[.!?]+/g) || []).length);
+  const complexity = avgSentLen > 30 ? 'Complex' : avgSentLen > 18 ? 'Moderate' : 'Simple';
+  return { words: words.toLocaleString(), readMin, clauses, complexity };
+}
+
+function generateSmartSuggestions(entities, parsed) {
+  const dt = ((entities && entities.doc_type) || '').toLowerCase();
+  const hasRed   = parsed && parsed.cards && parsed.cards.some(c => c.level === 'RED');
+  const hasAmber = parsed && parsed.cards && parsed.cards.some(c => c.level === 'AMBER');
+
+  const byType = {
+    employment: [
+      'Is the non-compete clause enforceable in my jurisdiction?',
+      'Who owns intellectual property I create during employment?',
+      'Can my employer change my role or salary without consent?',
+      'What are my rights if I am made redundant?',
+    ],
+    nda: [
+      'How long does the confidentiality obligation last after I leave?',
+      'What information is excluded from the NDA scope?',
+      'Can I discuss this contract with my lawyer?',
+      'What happens if I accidentally disclose confidential information?',
+    ],
+    freelance: [
+      'Who owns the copyright for deliverables I create?',
+      'What happens to payment if the client cancels the project?',
+      'Can I use this work in my portfolio?',
+      'Are there penalties for late payment in my favour?',
+    ],
+    service: [
+      'What are the service level guarantees and penalties?',
+      'Can pricing be changed during the contract term?',
+      'What liability do I have if the service is unavailable?',
+      'What are the exit terms and wind-down obligations?',
+    ],
+    lease: [
+      'What repairs am I responsible for as a tenant?',
+      'Can the landlord increase rent during the lease term?',
+      'What notice period is required to end the tenancy?',
+      'Are there restrictions on subletting or alterations?',
+    ],
+  };
+
+  let suggestions = [];
+  for (const key of Object.keys(byType)) {
+    if (dt.includes(key)) { suggestions = [...byType[key]]; break; }
+  }
+  if (!suggestions.length) suggestions = [
+    'What are my key obligations under this contract?',
+    'What happens if either party breaches this agreement?',
+    'Are there any auto-renewal clauses I should know about?',
+    'What is the notice period and termination process?',
+  ];
+
+  if (hasRed)   suggestions.unshift('Can you rewrite the most dangerous clause in plain language?');
+  if (hasAmber) suggestions.unshift('Which amber clauses should I prioritise negotiating?');
+
+  return suggestions.slice(0, 5);
+}
+
+function renderIntelPanel(entities, scoreData, parsed, docText) {
+  const panel = document.createElement('div');
+  panel.className = 'intel-panel';
+
+  // ── Header ──────────────────────────────────────────────────────────
+  let html = `<div class="intel-header">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+    </svg>
+    Contract Intelligence
+  </div><div class="intel-body">`;
+
+  // ── Doc stats ────────────────────────────────────────────────────────
+  if (docText) {
+    const stats = computeDocStats(docText);
+    html += `<div>
+      <div class="intel-section-label">Document Statistics</div>
+      <div class="intel-stats">
+        <span class="intel-stat-chip">📄 ${stats.words} words</span>
+        <span class="intel-stat-chip">⏱ ${stats.readMin} min read</span>
+        ${stats.clauses ? `<span class="intel-stat-chip">§ ${stats.clauses} clauses</span>` : ''}
+        <span class="intel-stat-chip">🧠 ${stats.complexity}</span>
+      </div>
+    </div>`;
+  }
+
+  // ── Health score gauge ───────────────────────────────────────────────
+  if (scoreData && scoreData.overall !== undefined) {
+    const ov  = Math.max(0, Math.min(100, scoreData.overall));
+    const col = scoreColor(ov);
+    const circ = 141.4;
+    const offset = circ; // start empty, animated later
+
+    html += `<div>
+      <div class="intel-section-label">Health Score</div>
+      <div class="intel-score-row">
+        <div class="intel-gauge-wrap">
+          <svg width="130" height="78" viewBox="0 0 130 78">
+            <path d="M 15 68 A 50 50 0 0 1 115 68" fill="none" stroke="var(--accent-muted)" stroke-width="12" stroke-linecap="round"/>
+            <path class="gauge-arc" d="M 15 68 A 50 50 0 0 1 115 68" fill="none" stroke="${col}" stroke-width="12" stroke-linecap="round"
+                  stroke-dasharray="${circ}" stroke-dashoffset="${circ}" data-target="${circ * (1 - ov / 100)}"
+                  style="transition:stroke-dashoffset 1.3s cubic-bezier(.22,1,.36,1)"/>
+            <text x="65" y="60" text-anchor="middle" style="font-size:30px;font-weight:900;fill:var(--text)">${ov}</text>
+            <text x="65" y="73" text-anchor="middle" style="font-size:9px;fill:var(--text-3);letter-spacing:.08em">HEALTH SCORE</text>
+          </svg>
+          <div class="intel-gauge-verdict" style="color:${col}">${escHtml(scoreData.verdict || '')}</div>
+        </div>
+        <div class="intel-bars">
+          ${renderScoreBar('Fairness',       scoreData.fairness)}
+          ${renderScoreBar('Clarity',        scoreData.clarity)}
+          ${renderScoreBar('Completeness',   scoreData.completeness)}
+          ${renderScoreBar('Risk Cover',     scoreData.risk_protection)}
+        </div>
+      </div>
+      ${(scoreData.top_issues && scoreData.top_issues.length)
+        ? `<div class="intel-issues" style="margin-top:10px">
+            ${scoreData.top_issues.map(i => `<span class="intel-issue-chip">⚠ ${escHtml(i)}</span>`).join('')}
+           </div>` : ''}
+    </div>`;
+  }
+
+  // ── Entities ─────────────────────────────────────────────────────────
+  if (entities) {
+    let entityHtml = '';
+
+    if (entities.parties && entities.parties.length) {
+      entityHtml += `<div class="intel-entity-row">
+        ${entities.parties.map(p =>
+          `<span class="e-chip party" title="${escHtml(p.role || '')}">👤 ${escHtml(p.name)}</span>`
+        ).join('')}
+      </div>`;
+    }
+
+    const meta = [];
+    if (entities.jurisdiction) meta.push(`<span class="e-chip jurisdiction">📍 ${escHtml(entities.jurisdiction)}</span>`);
+    if (entities.governing_law && entities.governing_law !== entities.jurisdiction)
+      meta.push(`<span class="e-chip jurisdiction" title="Governing law">⚖ ${escHtml(entities.governing_law)}</span>`);
+    (entities.dates || []).forEach(d =>
+      meta.push(`<span class="e-chip date" title="${escHtml(d.description || '')}">📅 ${escHtml(d.value || '')}</span>`)
+    );
+    (entities.amounts || []).forEach(a =>
+      meta.push(`<span class="e-chip amount" title="${escHtml(a.description || '')}">💰 ${escHtml(a.value || '')} ${escHtml(a.currency || '')}</span>`)
+    );
+
+    if (entityHtml || meta.length) {
+      html += `<div>
+        <div class="intel-section-label">Key Entities</div>
+        ${entityHtml}
+        ${meta.length ? `<div class="intel-entity-row" style="margin-top:8px">${meta.join('')}</div>` : ''}
+      </div>`;
+    }
+
+    // Obligations
+    const obParties = Object.keys(entities.obligations || {}).filter(k => (entities.obligations[k] || []).length);
+    if (obParties.length) {
+      html += `<div>
+        <div class="intel-section-label">Key Obligations</div>
+        <div class="intel-obligations-grid">
+          ${obParties.slice(0, 2).map(p => `
+            <div>
+              <div class="intel-party-name">${escHtml(p)}</div>
+              <ul class="intel-ob-list">
+                ${(entities.obligations[p] || []).slice(0, 4).map(o => `<li>${escHtml(o)}</li>`).join('')}
+              </ul>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  }
+
+  // ── Smart suggestions ────────────────────────────────────────────────
+  const suggestions = generateSmartSuggestions(entities, parsed);
+  html += `<div>
+    <div class="intel-section-label">💡 Ask Zane</div>
+    <div class="intel-suggestions">
+      ${suggestions.map(s =>
+        `<button class="intel-suggest-chip" data-suggestion="${escHtml(s)}">${escHtml(s)}</button>`
+      ).join('')}
+    </div>
+  </div>`;
+
+  // ── Translate button (Pro, non-English language selected) ────────────
+  if (selectedLanguage !== 'en') {
+    html += `<div style="padding:4px 0 8px">
+      <button class="intel-translate-btn" onclick="translateLastAnalysis()">
+        🌐 Translate this analysis to ${escHtml(LANGUAGES[selectedLanguage] || selectedLanguage)}
+      </button>
+    </div>`;
+  }
+
+  html += '</div>'; // close intel-body
+  panel.innerHTML = html;
+  document.getElementById('messagesInner').appendChild(panel);
+  scrollToBottom();
+
+  // Animate gauge and bars after DOM insert
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    panel.querySelectorAll('.gauge-arc').forEach(el => {
+      el.style.strokeDashoffset = el.dataset.target;
+    });
+    panel.querySelectorAll('.intel-bar-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }));
+}
+
+async function fetchIntelligence(docText, analysisText, parsed) {
+  const loader = document.createElement('div');
+  loader.className = 'intel-loading';
+  loader.innerHTML = `<div class="typing-dots"><span></span><span></span><span></span></div> Analysing contract intelligence…`;
+  document.getElementById('messagesInner').appendChild(loader);
+  scrollToBottom();
+
+  try {
+    const [entityRes, scoreRes] = await Promise.all([
+      fetch('/extract', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: docText.slice(0, 9000) }),
+      }),
+      fetch('/score', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary: analysisText.slice(0, 6000) }),
+      }),
+    ]);
+
+    const entities  = entityRes.ok ? await entityRes.json() : null;
+    const scoreData = scoreRes.ok  ? await scoreRes.json()  : null;
+
+    loader.remove();
+
+    if (entities || scoreData) {
+      renderIntelPanel(entities, scoreData, parsed, lastDocumentText);
+    }
+
+    // Pro: also fetch timeline
+    fetchTimeline(docText);
+
+  } catch (_) {
+    loader.remove();
+  }
+}
+
+async function fetchTimeline(docText) {
+  if (!docText) return;
+  try {
+    const res = await fetch('/timeline', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: docText.slice(0, 8000) }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.items && data.items.length > 0) renderTimelinePanel(data.items);
+  } catch (_) { /* silent */ }
+}
+
+function renderTimelinePanel(items) {
+  const wrap = document.getElementById('messagesInner');
+  if (!wrap) return;
+
+  const TYPE_LABELS = { start: 'Start', deadline: 'Deadline', payment: 'Payment', renewal: 'Renewal', notice: 'Notice', other: 'Other' };
+
+  const itemsHtml = items.map(item => `
+    <div class="tl-item">
+      <div class="tl-dot ${escHtml(item.urgency || 'low')}"></div>
+      <div>
+        <div class="tl-label">
+          ${escHtml(item.label || '')}
+          <span class="tl-type-badge tl-type-${escHtml(item.type || 'other')}">${escHtml(TYPE_LABELS[item.type] || 'Other')}</span>
+        </div>
+        <div class="tl-date">${escHtml(item.date || '')}</div>
+      </div>
+    </div>`).join('');
+
+  const panel = document.createElement('div');
+  panel.className = 'timeline-panel';
+  panel.innerHTML = `
+    <div class="timeline-header">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      Key Dates &amp; Deadlines
+    </div>
+    <div class="timeline-body">
+      <div class="timeline-track">${itemsHtml}</div>
+    </div>`;
+  wrap.appendChild(panel);
+  scrollToBottom();
+}
+
+/* ─── Language selector ────────────────────────────────────────────── */
+function toggleLangDropdown() {
+  langDropdownOpen = !langDropdownOpen;
+  const dd  = document.getElementById('langDropdown');
+  const btn = document.getElementById('langBtn');
+  dd.classList.toggle('open', langDropdownOpen);
+  btn.classList.toggle('open', langDropdownOpen);
+  if (langDropdownOpen) renderLangDropdown();
+}
+
+function closeLangDropdown() {
+  langDropdownOpen = false;
+  document.getElementById('langDropdown').classList.remove('open');
+  document.getElementById('langBtn').classList.remove('open');
+}
+
+function renderLangDropdown() {
+  const dd = document.getElementById('langDropdown');
+  dd.innerHTML = Object.entries(LANGUAGES).map(([code, name]) => {
+    const active = code === selectedLanguage;
+    return `<div class="lang-option ${active ? 'active' : ''}" onclick="setLanguage('${escHtml(code)}')">
+      <span>${escHtml(name)}</span>
+      <span>${active ? '✓' : ''}</span>
+    </div>`;
+  }).join('');
+}
+
+function setLanguage(code) {
+  selectedLanguage = code;
+  localStorage.setItem('zane_language', code);
+  closeLangDropdown();
+  document.getElementById('langCurrentName').textContent = LANGUAGES[code] || 'English';
+  showToast('Language: ' + (LANGUAGES[code] || 'English'));
+}
+
+async function translateLastAnalysis() {
+  if (selectedLanguage === 'en') { showToast('Already in English. Select another language first.'); return; }
+
+  // Get the last assistant analysis from messageLog
+  const lastBot = [...messageLog].reverse().find(m => m.role === 'assistant');
+  if (!lastBot || !lastBot.text) { showToast('No analysis to translate yet.'); return; }
+
+  const botEl = createBotMessageEl();
+  const mdEl  = botEl.querySelector('.bot-markdown');
+  mdEl.innerHTML = `<span class="spinner-sm"></span> Translating to ${LANGUAGES[selectedLanguage]}…`;
+
+  try {
+    const res = await fetch('/translate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: lastBot.text, language: selectedLanguage }),
+    });
+    if (!res.ok) { mdEl.innerHTML = '<em>Translation failed. Please try again.</em>'; return; }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '', full = '';
+    mdEl.innerHTML = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split('\n\n');
+      buffer = parts.pop();
+      for (const part of parts) {
+        if (!part.startsWith('data:')) continue;
+        let evt; try { evt = JSON.parse(part.slice(5).trim()); } catch { continue; }
+        if (evt.chunk) { full += evt.chunk; mdEl.innerHTML = renderMarkdown(full); scrollToBottom(); }
+        else if (evt.done) {
+          const author = botEl.querySelector('.msg-author');
+          if (author) author.textContent = `Zane · Translated to ${LANGUAGES[selectedLanguage]}`;
+          applyGlossaryTooltips(mdEl);
+          messageLog.push({ role: 'assistant', text: full, model: `Translated (${LANGUAGES[selectedLanguage]})` });
+        }
+      }
+    }
+  } catch { mdEl.innerHTML = '<em>Network error. Please try again.</em>'; }
+}
+
 /* ─── Chat history ──────────────────────────────────────────────────── */
 function loadChats() {
   try { return JSON.parse(localStorage.getItem('chatHistory') || '[]'); }
@@ -1777,13 +3023,28 @@ function loadChats() {
 }
 
 function saveChats() {
-  localStorage.setItem('chatHistory', JSON.stringify(chats.slice(0, 30)));
+  try {
+    localStorage.setItem('chatHistory', JSON.stringify(chats.slice(0, 30)));
+  } catch (_) {
+    // quota exceeded — trim aggressively and retry
+    try {
+      const slim = chats.slice(0, 10).map(c => ({ id: c.id, title: c.title, ts: c.ts, messages: (c.messages || []).slice(-6) }));
+      localStorage.setItem('chatHistory', JSON.stringify(slim));
+    } catch (__) { /* give up silently */ }
+  }
 }
 
 function saveChatToHistory(userMsg, botMsg) {
-  const title    = userMsg.length > 45 ? userMsg.slice(0, 45) + '…' : userMsg;
+  // Use the clean display text (first user message) as title, not the raw apiMessage
+  const firstUser = messageLog.find(m => m.role === 'user');
+  const displayText = firstUser ? firstUser.text : userMsg;
+  const title = displayText.length > 48 ? displayText.slice(0, 48) + '…' : displayText;
+
   const existing = chats.findIndex(c => c.id === currentChatId);
-  const entry    = { id: currentChatId, title, ts: Date.now() };
+  const entry = {
+    id: currentChatId, title, ts: Date.now(),
+    messages: messageLog.map(m => ({ ...m })), // full snapshot for replay
+  };
   if (existing >= 0) chats[existing] = entry;
   else chats.unshift(entry);
   saveChats();
@@ -1818,17 +3079,45 @@ function renderChatList() {
     </div>`).join('');
 }
 
+function renderStoredMessages(messages) {
+  messageLog.length = 0;
+  hideWelcome();
+  for (const m of messages) {
+    try {
+      if (m.role === 'user') {
+        addUserMessage(m.text || '');
+      } else {
+        const botEl = createBotMessageEl();
+        updateBotEl(botEl, m.text || '', true, m.model || '');
+        messageLog.push({ role: 'assistant', text: m.text || '', model: m.model || '' });
+      }
+    } catch (_) { /* skip malformed message */ }
+  }
+  scrollToBottom();
+}
+
 async function switchChat(id) {
   if (id === currentChatId) { closeSidebar(); return; }
   await fetch('/clear', { method: 'POST' });
   currentChatId = id;
-  messageLog.length = 0;
   lastUserMessage = '';
+  messageLog.length = 0;
   document.getElementById('messagesInner').innerHTML = '';
-  document.getElementById('welcome').style.display = '';
+
+  const chat = chats.find(c => c.id === id);
+  if (chat && Array.isArray(chat.messages) && chat.messages.length > 0) {
+    document.getElementById('welcome').style.display = 'none';
+    renderStoredMessages(chat.messages);
+    const lastUser = [...chat.messages].reverse().find(m => m.role === 'user');
+    if (lastUser) lastUserMessage = lastUser.text;
+  } else {
+    // Old entry with no stored messages — show welcome screen
+    document.getElementById('welcome').style.display = '';
+    if (chat) showToast('Old chat — messages weren\'t saved. Send a new message to continue.');
+  }
+
   renderChatList();
   closeSidebar();
-  showToast('Switched chat — server context reset');
 }
 
 /* ─── Risk Card Parser & Renderer ───────────────────────────────────── */
@@ -1917,13 +3206,65 @@ function renderRiskView(parsed) {
 
   const rid     = ++riskRenderCounter;
   const docType = guessDocType(summaryPart);
+  const fname   = currentFilename || 'Document';
+
+  // Store snapshot for PDF / copy export
+  analysisStore.set(rid, {
+    docType, filename: fname, timestamp: new Date(),
+    red: red.length, amber: amber.length, green: green.length,
+    summaryPart, cards, invitePart,
+  });
 
   const EXPLAIN_ICON  = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
   const HIDE_ICON     = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>`;
   const REWRITE_ICON  = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
   const COLLAPSE_ICON = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>`;
 
-  let html = '';
+  // ── Overall risk verdict ────────────────────────────────────────────
+  let robClass, verdictClass, verdictIcon, verdictText;
+  if (red.length > 0) {
+    robClass = 'rob-red'; verdictClass = 'rob-verdict-red';
+    verdictIcon = '⚠'; verdictText = 'Review carefully before signing';
+  } else if (amber.length > 0) {
+    robClass = 'rob-amber'; verdictClass = 'rob-verdict-amber';
+    verdictIcon = '💡'; verdictText = 'Some clauses worth negotiating';
+  } else {
+    robClass = 'rob-green'; verdictClass = 'rob-verdict-green';
+    verdictIcon = '✅'; verdictText = 'Looks clean — low risk';
+  }
+
+  let pillsHtml = '';
+  if (red.length)   pillsHtml += `<span class="risk-count rc-red">${red.length} RED</span>`;
+  if (amber.length) pillsHtml += `<span class="risk-count rc-amber">${amber.length} AMBER</span>`;
+  if (green.length) pillsHtml += `<span class="risk-count rc-green">${green.length} GREEN</span>`;
+
+  // ── Build HTML ──────────────────────────────────────────────────────
+  let html = `
+  <div class="report-actions-bar">
+    <button class="report-action-btn rba-pdf" data-action="pdf" data-rid="${rid}">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+      </svg>
+      Export PDF
+    </button>
+    <button class="report-action-btn" data-action="copy-report" data-rid="${rid}">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+      </svg>
+      Copy Report
+    </button>
+  </div>
+
+  <div class="risk-overview-badge ${robClass}">
+    <div class="rob-top">
+      <div class="rob-left">
+        <span class="rob-doc-name" title="${escHtml(fname)}">${escHtml(fname)}</span>
+        <span class="rob-doc-type">${escHtml(docType)}</span>
+      </div>
+      <span class="rob-verdict ${verdictClass}">${verdictIcon} ${verdictText}</span>
+    </div>
+    <div class="rob-pills">${pillsHtml}</div>
+  </div>`;
 
   if (summaryPart.trim())
     html += `<div class="risk-summary">${renderMarkdown(summaryPart)}</div>`;
@@ -1931,11 +3272,7 @@ function renderRiskView(parsed) {
   if (cards.length === 0) {
     html += `<div class="risk-clear-banner">✅ No significant risks found</div>`;
   } else {
-    html += `<div class="risk-score-bar">`;
-    if (red.length)   html += `<span class="risk-count rc-red">${red.length} RED</span>`;
-    if (amber.length) html += `<span class="risk-count rc-amber">${amber.length} AMBER</span>`;
-    if (green.length) html += `<span class="risk-count rc-green">${green.length} GREEN</span>`;
-    html += `</div><div class="risk-cards">`;
+    html += `<div class="risk-cards">`;
 
     cards.forEach((card, idx) => {
       const lvl          = card.level.toLowerCase();
@@ -2025,6 +3362,7 @@ async function uploadFile(file) {
     if (data.error) { showFileError(data.error); return; }
 
     documentText = data.text;
+    currentFilename = file.name;
     showFilePreview(file.name, file.size, data.pages);
 
   } catch (_) {
@@ -2101,6 +3439,317 @@ function clearFile() {
   });
 })();
 
+/* ─── Document History ──────────────────────────────────────────────── */
+const DOC_HIST_KEY      = 'zane_doc_history';
+const DOC_HIST_MAX = 50;
+
+function loadDocHistory() {
+  try { return JSON.parse(localStorage.getItem(DOC_HIST_KEY) || '[]'); }
+  catch (_) { return []; }
+}
+function saveDocHistoryStore(arr) {
+  try {
+    localStorage.setItem(DOC_HIST_KEY, JSON.stringify(arr));
+  } catch (_) {
+    try {
+      // strip rawText to reduce size and retry
+      const slim = arr.slice(0, 5).map(e => ({ ...e, rawText: '' }));
+      localStorage.setItem(DOC_HIST_KEY, JSON.stringify(slim));
+    } catch (__) { /* give up */ }
+  }
+}
+
+function addDocHistEntry(rawText, filename, parsed) {
+  const arr = loadDocHistory();
+
+  const docType    = guessDocType(parsed.summaryPart || '');
+  const cards      = parsed.cards || [];
+  const riskCounts = {
+    red:   cards.filter(c => c.level === 'RED').length,
+    amber: cards.filter(c => c.level === 'AMBER').length,
+    green: cards.filter(c => c.level === 'GREEN').length,
+  };
+
+  arr.unshift({ id: generateId(), filename: filename || 'Pasted text', datetime: new Date().toISOString(), docType, riskCounts, rawText });
+
+  while (arr.length > DOC_HIST_MAX) arr.pop();
+
+  saveDocHistoryStore(arr);
+  renderDocHistory();
+  if (!docHistOpen && arr.length === 1) openDocHist();
+}
+
+function deleteDocHistEntry(id, ev) {
+  ev.stopPropagation();
+  saveDocHistoryStore(loadDocHistory().filter(e => e.id !== id));
+  renderDocHistory();
+}
+
+function clearDocHistory() {
+  localStorage.removeItem(DOC_HIST_KEY);
+  renderDocHistory();
+  showToast('History cleared');
+}
+
+function replayDocHistory(id) {
+  const entry = loadDocHistory().find(e => e.id === id);
+  if (!entry) return;
+  currentFilename  = entry.filename;
+  lastDocumentText = '';
+  messageLog.length = 0;
+  document.getElementById('messagesInner').innerHTML = '';
+  document.getElementById('welcome').style.display = 'none';
+  const botEl = createBotMessageEl();
+  updateBotEl(botEl, entry.rawText, true, 'History');
+  messageLog.push({ role: 'assistant', text: entry.rawText, model: 'History' });
+  const author = botEl.querySelector('.msg-author');
+  if (author) author.textContent = 'Zane · ' + escHtml(entry.filename);
+  if (window.innerWidth <= 768) closeDocHist();
+  scrollToBottom();
+}
+
+function renderDocHistory() {
+  const el = document.getElementById('dhList');
+  if (!el) return;
+  const arr = loadDocHistory();
+
+  if (!arr.length) {
+    el.innerHTML = `<div class="dh-empty"><span class="dh-empty-icon">🗂</span>No document history yet.<br>Analyse a document to get started.</div>`;
+    return;
+  }
+
+  let html = '';
+  html += arr.map(e => {
+    const d  = new Date(e.datetime);
+    const dt = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) +
+               ' · ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const { red = 0, amber = 0, green = 0 } = e.riskCounts || {};
+    let pills = '';
+    if (red)   pills += `<span class="dh-risk-pill dh-r">${red} RED</span>`;
+    if (amber) pills += `<span class="dh-risk-pill dh-a">${amber} AMBER</span>`;
+    if (green) pills += `<span class="dh-risk-pill dh-g">${green} GREEN</span>`;
+    return `<div class="dh-entry" onclick="replayDocHistory('${e.id}')">
+      <div class="dh-entry-name" title="${escHtml(e.filename)}">${escHtml(e.filename)}</div>
+      <div class="dh-entry-date">${escHtml(dt)}</div>
+      <div class="dh-entry-type">${escHtml(e.docType)}</div>
+      ${pills ? `<div class="dh-entry-risks">${pills}</div>` : ''}
+      <button class="dh-del-btn" onclick="deleteDocHistEntry('${e.id}', event)" title="Remove">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>`;
+  }).join('');
+  el.innerHTML = html;
+}
+
+function openDocHist() {
+  docHistOpen = true;
+  const el = document.getElementById('docHistSidebar');
+  el.classList.remove('closed');
+  el.classList.add('open');
+  if (window.innerWidth <= 768) document.getElementById('overlay').classList.add('visible');
+}
+function closeDocHist() {
+  docHistOpen = false;
+  const el = document.getElementById('docHistSidebar');
+  el.classList.add('closed');
+  el.classList.remove('open');
+  if (window.innerWidth <= 768) document.getElementById('overlay').classList.remove('visible');
+}
+function toggleDocHist() { docHistOpen ? closeDocHist() : openDocHist(); }
+
+/* ─── Export: PDF & plain text ──────────────────────────────────────── */
+function _stripMd(text) {
+  return (text || '')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`]+`/g, s => s.slice(1, -1))
+    .replace(/[*_]{1,3}([^*_]+)[*_]{1,3}/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^[>\s*-]+/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function exportAnalysisPDF(rid) {
+  const d = analysisStore.get(rid);
+  if (!d) { showToast('No analysis data to export'); return; }
+  if (!window.jspdf) { showToast('PDF library not loaded yet — please try again'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const PAGE_W  = doc.internal.pageSize.getWidth();
+  const PAGE_H  = doc.internal.pageSize.getHeight();
+  const M       = 18;
+  const CONTENT = PAGE_W - M * 2;
+  let y = M;
+
+  function checkPage(needed) {
+    if (y + needed > PAGE_H - M) { doc.addPage(); y = M; }
+  }
+
+  function addWrapped(text, size, style, rgb, indent) {
+    indent = indent || 0;
+    doc.setFontSize(size);
+    doc.setFont('helvetica', style || 'normal');
+    doc.setTextColor(...rgb);
+    const lines = doc.splitTextToSize(text, CONTENT - indent);
+    checkPage(lines.length * size * 0.38 + 2);
+    doc.text(lines, M + indent, y);
+    y += lines.length * (size * 0.38) + 2;
+  }
+
+  function hRule(rgb) {
+    doc.setDrawColor(...(rgb || [210, 218, 240]));
+    doc.line(M, y, PAGE_W - M, y);
+    y += 5;
+  }
+
+  // ── Header ──────────────────────────────────────────────────────────
+  doc.setFillColor(10, 26, 110);
+  doc.roundedRect(M, y, 34, 9, 2, 2, 'F');
+  doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
+  doc.text('ZANE', M + 3, y + 6.2);
+  doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 110, 150);
+  doc.text('Legal Document Analysis Report', M + 38, y + 3.8);
+  doc.text(d.timestamp.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }), M + 38, y + 8.2);
+  y += 16; hRule();
+
+  // ── Document info ────────────────────────────────────────────────────
+  addWrapped(d.filename, 15, 'bold', [6, 15, 46]);
+  y += 1;
+  addWrapped(d.docType, 9, 'normal', [100, 115, 155]);
+  y += 5;
+
+  // ── Overall risk box ─────────────────────────────────────────────────
+  let boxFill, verdictRgb, verdictTxt;
+  if (d.red > 0)        { boxFill=[253,237,237]; verdictRgb=[185,28,28];  verdictTxt=`⚠  Review carefully before signing  |  ${d.red} RED  ${d.amber} AMBER  ${d.green} GREEN`; }
+  else if (d.amber > 0) { boxFill=[255,249,231]; verdictRgb=[180,110,0];  verdictTxt=`!  Some clauses worth negotiating  |  ${d.amber} AMBER  ${d.green} GREEN`; }
+  else                  { boxFill=[237,253,243]; verdictRgb=[21,128,61];  verdictTxt=`✓  Looks clean — low risk  |  ${d.green} GREEN`; }
+
+  checkPage(16);
+  doc.setFillColor(...boxFill);
+  doc.roundedRect(M, y, CONTENT, 14, 2, 2, 'F');
+  doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(...verdictRgb);
+  doc.text(verdictTxt, M + 4, y + 8.8);
+  y += 20;
+
+  // ── Summary ──────────────────────────────────────────────────────────
+  if (d.summaryPart && d.summaryPart.trim()) {
+    addWrapped('Summary', 11, 'bold', [6, 15, 46]); y -= 1; hRule();
+    addWrapped(_stripMd(d.summaryPart), 9, 'normal', [40, 55, 90]);
+    y += 4;
+  }
+
+  // ── Risk cards ───────────────────────────────────────────────────────
+  if (d.cards && d.cards.length) {
+    addWrapped('Risk Flags', 11, 'bold', [6, 15, 46]); y -= 1; hRule();
+
+    for (const card of d.cards) {
+      checkPage(28);
+      let lr, lg, lb, tr, tg, tb;
+      if (card.level === 'RED')        { lr=253;lg=237;lb=237; tr=185;tg=28;tb=28; }
+      else if (card.level === 'AMBER') { lr=255;lg=249;lb=231; tr=180;tg=110;tb=0; }
+      else                             { lr=237;lg=253;lb=243; tr=21;tg=128;tb=61; }
+
+      // Level badge
+      const bw = card.level === 'AMBER' ? 17 : 13;
+      doc.setFillColor(lr, lg, lb);
+      doc.roundedRect(M, y, bw, 5.5, 1, 1, 'F');
+      doc.setFontSize(6.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(tr, tg, tb);
+      doc.text(card.level, M + 1.5, y + 4);
+
+      // Clause type
+      doc.setFontSize(9.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(6, 15, 46);
+      const ct = doc.splitTextToSize(card.clauseType, CONTENT - bw - 4);
+      doc.text(ct, M + bw + 3, y + 4);
+      y += Math.max(7, ct.length * 4.5);
+
+      // Quote
+      if (card.quote) {
+        const qLines = doc.splitTextToSize(`"${card.quote}"`, CONTENT - 4);
+        checkPage(qLines.length * 4 + 6);
+        doc.setFillColor(245, 247, 255);
+        doc.roundedRect(M, y, CONTENT, qLines.length * 4 + 5, 1, 1, 'F');
+        doc.setFontSize(8); doc.setFont('helvetica', 'italic'); doc.setTextColor(80, 95, 140);
+        doc.text(qLines, M + 3, y + 3.8);
+        y += qLines.length * 4 + 8;
+      }
+
+      // Explanation
+      if (card.explanation) {
+        addWrapped(_stripMd(card.explanation), 8.5, 'normal', [45, 58, 95]);
+      }
+
+      doc.setDrawColor(220, 226, 245); doc.line(M, y, PAGE_W - M, y); y += 6;
+    }
+  }
+
+  // ── Invite / closing ─────────────────────────────────────────────────
+  if (d.invitePart && d.invitePart.trim()) {
+    addWrapped(_stripMd(d.invitePart), 8.5, 'italic', [80, 95, 140]);
+    y += 4;
+  }
+
+  // ── Footer ──────────────────────────────────────────────────────────
+  checkPage(14);
+  hRule([200, 210, 235]);
+  doc.setFontSize(7.5); doc.setFont('helvetica', 'italic'); doc.setTextColor(150, 160, 190);
+  doc.text('Zane provides document analysis and plain-English explanations, not legal advice.', M, y);
+  y += 4;
+  doc.text('For significant contracts, consider having a solicitor review before signing.', M, y);
+
+  // ── Save ────────────────────────────────────────────────────────────
+  const safeName = (d.filename || 'Document').replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '-').slice(0, 40);
+  const dateStr  = d.timestamp.toISOString().slice(0, 10);
+  doc.save(`Zane-Analysis-${safeName}-${dateStr}.pdf`);
+  showToast('PDF exported');
+}
+
+function copyFullReport(rid) {
+  const d = analysisStore.get(rid);
+  if (!d) { showToast('No analysis data to copy'); return; }
+
+  let verdict, riskLine;
+  if (d.red > 0)        { verdict = '⚠ HIGH RISK — Review carefully before signing'; }
+  else if (d.amber > 0) { verdict = '! MEDIUM RISK — Some clauses worth negotiating'; }
+  else                  { verdict = '✓ LOW RISK — Looks clean'; }
+
+  riskLine = [d.red && `${d.red} Red`, d.amber && `${d.amber} Amber`, d.green && `${d.green} Green`].filter(Boolean).join(' · ');
+
+  let t = `ZANE LEGAL ANALYSIS REPORT\n${'═'.repeat(44)}\n`;
+  t += `Document : ${d.filename}\n`;
+  t += `Type     : ${d.docType}\n`;
+  t += `Date     : ${d.timestamp.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}\n\n`;
+  t += `OVERALL RISK\n${'─'.repeat(28)}\n${verdict}\n${riskLine}\n\n`;
+
+  if (d.summaryPart && d.summaryPart.trim()) {
+    t += `SUMMARY\n${'─'.repeat(28)}\n${_stripMd(d.summaryPart)}\n\n`;
+  }
+
+  if (d.cards && d.cards.length) {
+    t += `RISK FLAGS\n${'─'.repeat(28)}\n`;
+    for (const c of d.cards) {
+      const icon = c.level === 'RED' ? '🔴' : c.level === 'AMBER' ? '🟡' : '🟢';
+      t += `\n${icon} ${c.level} — ${c.clauseType}\n`;
+      if (c.quote) t += `Quote: "${c.quote}"\n`;
+      if (c.explanation) t += `${_stripMd(c.explanation)}\n`;
+    }
+    t += '\n';
+  }
+
+  if (d.invitePart && d.invitePart.trim()) {
+    t += `${_stripMd(d.invitePart)}\n\n`;
+  }
+
+  t += `${'─'.repeat(44)}\n`;
+  t += `Zane provides document analysis and plain-English explanations, not legal advice.\n`;
+  t += `For significant contracts, consider having a solicitor review before signing.\n`;
+
+  navigator.clipboard.writeText(t).then(() => showToast('Full report copied to clipboard'));
+}
+
 /* ─── Pro modal ─────────────────────────────────────────────────────── */
 function showProModal() {
   document.getElementById('proModalBackdrop').classList.add('visible');
@@ -2111,12 +3760,14 @@ function hideProModal(e) {
 }
 function handleProUpgrade() {
   document.getElementById('proModalBackdrop').classList.remove('visible');
-  // Switch user to Pro provider tab as a quick path
-  setProvider('anthropic');
-  showToast('Switched to Pro mode — add your Anthropic API key to unlock full Pro features');
+  showProUpgradePage();
 }
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.getElementById('proModalBackdrop').classList.remove('visible');
+  if (e.key === 'Escape') {
+    document.getElementById('proModalBackdrop').classList.remove('visible');
+    hideProUpgradePage();
+    hideProManage();
+  }
 });
 
 /* ─── Rewrite clause ─────────────────────────────────────────────────── */
@@ -2184,11 +3835,6 @@ function renderRewritePanel(sections) {
 }
 
 async function toggleRewrite(btn) {
-  if (selectedProvider !== 'anthropic') {
-    showProModal();
-    return;
-  }
-
   const panel = document.getElementById(btn.dataset.panel);
   if (!panel) return;
 
@@ -2221,6 +3867,7 @@ async function toggleRewrite(btn) {
         clause:    btn.dataset.clause,
         docType:   btn.dataset.doctype,
         riskLevel: btn.dataset.level,
+        language:  selectedLanguage,
       }),
     });
 
@@ -2308,7 +3955,7 @@ async function toggleExplain(btn) {
     const res = await fetch('/explain', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clause: btn.dataset.clause, docType: btn.dataset.doctype }),
+      body: JSON.stringify({ clause: btn.dataset.clause, docType: btn.dataset.doctype, language: selectedLanguage }),
     });
 
     if (!res.ok) {
@@ -2351,6 +3998,128 @@ async function toggleExplain(btn) {
   } catch {
     panel.innerHTML = '<em>Network error. Please try again.</em>';
     setExplainLoading(btn, false);
+  }
+}
+
+/* ─── Pro system ─────────────────────────────────────────────────────── */
+function isProUser() {
+  return localStorage.getItem('zane_pro_status') === 'active';
+}
+
+function activatePro(code) {
+  localStorage.setItem('zane_pro_status', 'active');
+  localStorage.setItem('zane_pro_code', code);
+  // Switch provider to anthropic only if API key is configured
+  const tabA = document.getElementById('tabAnthropic');
+  if (tabA && !tabA.dataset.anthropicMissing) {
+    selectedProvider = 'anthropic';
+    localStorage.setItem('provider', 'anthropic');
+    updateProviderUI();
+    renderDocHistory();
+  }
+  renderProBadge();
+}
+
+function deactivatePro() {
+  localStorage.removeItem('zane_pro_status');
+  localStorage.removeItem('zane_pro_code');
+  // Revert to Groq
+  const tabG = document.getElementById('tabGroq');
+  if (tabG && !tabG.disabled) {
+    selectedProvider = 'groq';
+    localStorage.setItem('provider', 'groq');
+    updateProviderUI();
+    renderDocHistory();
+  }
+  renderProBadge();
+  hideProManage();
+  showToast('Pro deactivated — switched back to Free');
+}
+
+function renderProBadge() {
+  const badge = document.getElementById('proStatusBadge');
+  if (!badge) return;
+  badge.style.display = isProUser() ? 'flex' : 'none';
+  // Keep tab UI consistent
+  const tabA = document.getElementById('tabAnthropic');
+  if (isProUser() && tabA && !tabA.dataset.anthropicMissing) {
+    document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
+    tabA.classList.add('active');
+  }
+}
+
+function showProUpgradePage() {
+  document.getElementById('proPageOverlay').classList.add('open');
+  document.getElementById('proCodeInput').value = '';
+  document.getElementById('proCodeMsg').textContent = '';
+  document.getElementById('proCodeMsg').className = 'pro-code-msg';
+}
+
+function hideProUpgradePage() {
+  document.getElementById('proPageOverlay').classList.remove('open');
+}
+
+function handleProTabClick() {
+  if (isProUser()) {
+    showProManage();
+  } else {
+    showProUpgradePage();
+  }
+}
+
+function showProManage() {
+  const code = localStorage.getItem('zane_pro_code') || '—';
+  document.getElementById('proManageCode').textContent = 'Code used: ' + code;
+  document.getElementById('proManageOverlay').classList.add('open');
+}
+
+function hideProManage() {
+  document.getElementById('proManageOverlay').classList.remove('open');
+}
+
+async function validateProCode() {
+  const input = document.getElementById('proCodeInput');
+  const msgEl = document.getElementById('proCodeMsg');
+  const applyBtn = document.getElementById('proCodeApplyBtn');
+  const code = (input.value || '').trim();
+
+  if (!code) {
+    msgEl.textContent = 'Please enter a promo code';
+    msgEl.className = 'pro-code-msg err';
+    return;
+  }
+
+  applyBtn.disabled = true;
+  applyBtn.textContent = 'Checking…';
+  msgEl.textContent = '';
+  msgEl.className = 'pro-code-msg';
+
+  try {
+    const res = await fetch('/validate-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+    const data = await res.json();
+
+    if (data.valid) {
+      msgEl.textContent = data.message || 'Pro activated!';
+      msgEl.className = 'pro-code-msg ok';
+      setTimeout(() => {
+        hideProUpgradePage();
+        activatePro(code.toUpperCase());
+        showToast('⚡ Pro activated — enjoy unlimited access!');
+      }, 900);
+    } else {
+      msgEl.textContent = data.message || 'Invalid code';
+      msgEl.className = 'pro-code-msg err';
+    }
+  } catch {
+    msgEl.textContent = 'Network error — please try again';
+    msgEl.className = 'pro-code-msg err';
+  } finally {
+    applyBtn.disabled = false;
+    applyBtn.textContent = 'Apply';
   }
 }
 
