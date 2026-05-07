@@ -8,21 +8,17 @@ Zane is an AI-powered legal document analyst built for individuals, freelancers,
 
 ## Screenshots
 
-> More screenshots coming as the UI is finalised.
-
-<!--
 | Dark Mode — Chat Analysis | Contract Intelligence Panel |
 |---|---|
 | ![Analysis](docs/screenshots/analysis.png) | ![Intel Panel](docs/screenshots/intel-panel.png) |
 
 | Language Selector | Key Dates Timeline |
 |---|---|
-| ![Languages](docs/screenshots/languages.png) | ![Timeline](docs/screenshots/timeline.png) |
+| ![Languages](docs/screenshots/languages.png) | ![Timeline](docs/screenshots/Timeline.png) |
 
 | Pro Upgrade Page | Manage Pro |
 |---|---|
 | ![Pro Page](docs/screenshots/pro-page.png) | ![Manage](docs/screenshots/manage.png) |
--->
 
 ---
 
